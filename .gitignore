@@ -1,4 +1,4 @@
-application-local.yml
+**/application-local.yml
 
 HELP.md
 .gradle
