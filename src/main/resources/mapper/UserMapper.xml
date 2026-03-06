@@ -11,7 +11,7 @@
         VALUES (#{householdId}, #{email}, #{password}, #{name}, #{phone}, 'RESIDENT', 'PENDING', NOW())
     </insert>
 
-    <!-- 소셜 로그인 신규 사용자 등록 (password NOT NULL이므로 랜덤 비밀번호 포함) -->
+    <!-- 소셜 로그인 신규 사용자 등록 -->
     <insert id="signUpOAuth" useGeneratedKeys="true" keyProperty="userId"
             parameterType="com.apt.auth.dto.User">
         INSERT INTO user (email, password, name, role, status, provider, provider_id, created_at)
@@ -34,11 +34,11 @@
         SELECT u.user_id, u.email, u.name, u.phone, u.role, u.status,
                u.household_id, h.dong, h.ho, u.provider
         FROM user u
-        LEFT JOIN household h ON u.household_id = h.household_id
+                 LEFT JOIN household h ON u.household_id = h.household_id
         WHERE u.user_id = #{userId}
     </select>
 
-    <!-- 소셜 제공자 + 제공자 ID로 사용자 조회 (소셜 로그인 기존 계정 확인) -->
+    <!-- 소셜 제공자 + 제공자 ID로 사용자 조회 -->
     <select id="findByProviderAndProviderId" resultType="com.apt.auth.dto.User">
         SELECT user_id, household_id, email, name, role, status,
                provider, provider_id, created_at
@@ -60,7 +60,7 @@
         FROM refresh_token
         WHERE user_id = #{userId}
         ORDER BY created_at DESC
-        LIMIT 1
+            LIMIT 1
     </select>
 
     <!-- userId로 RT 삭제 (로그아웃, 재로그인 시 기존 RT 제거) -->
@@ -75,9 +75,7 @@
         WHERE refresh_token = #{refreshToken}
     </select>
 
-    <!-- 소프트 딜리트 (FR-012)
-         물리 삭제 없이 is_deleted=1, deleted_at=NOW() 기록
-         게시글·예약·차량 이력 데이터 보존 -->
+    <!-- 소프트 딜리트 (FR-012) -->
     <update id="softDeleteUser">
         UPDATE user
         SET is_deleted = 1,

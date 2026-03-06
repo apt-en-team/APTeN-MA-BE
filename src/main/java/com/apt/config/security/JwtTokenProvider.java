@@ -31,7 +31,7 @@ public class JwtTokenProvider {
         this.objectMapper = objectMapper;
         this.constJwt = constJwt;
         // Base64 인코딩된 secretKey를 디코딩해서 HMAC 서명 키 생성
-        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(constJwt.getSecretKey()));
+        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(constJwt.getSecretKey()));
         log.info("JwtTokenProvider 초기화 완료 - constJwt: {}", constJwt);
     }
 
