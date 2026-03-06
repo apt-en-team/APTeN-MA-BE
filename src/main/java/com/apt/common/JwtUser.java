@@ -16,4 +16,6 @@ public class JwtUser {
 
     private String name;
 
+    private String email;
+
 }
