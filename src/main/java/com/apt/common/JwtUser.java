@@ -13,4 +13,6 @@ public class JwtUser {
 
     // JWT에 담을 사용자 권한 (RESIDENT / ADMIN)
     private String role;
+
+    private String name;
 }
