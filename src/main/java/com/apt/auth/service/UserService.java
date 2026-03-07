@@ -3,9 +3,11 @@ package com.apt.auth.service;
 import com.apt.auth.dto.*;
 import com.apt.auth.mapper.UserMapper;
 import com.apt.common.JwtUser;
+import com.apt.common.exception.CustomException;
+import com.apt.common.exception.ErrorCode;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
-import com.apt.household.dto.Household;
+import com.apt.household.model.Household;
 import com.apt.household.mapper.HouseholdMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,17 +47,13 @@ public class UserService {
 
         // 이메일 중복 확인
         if (userMapper.findByEmail(req.getEmail()) != null) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다");
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        // 동/호로 세대 조회, 없으면 새로 등록
+        // 동/호로 세대 조회, 없으면 가입 불가
         Household household = householdMapper.findByDongAndHo(req.getDong(), req.getHo());
         if (household == null) {
-            Household newHousehold = new Household();
-            newHousehold.setDong(req.getDong());
-            newHousehold.setHo(req.getHo());
-            householdMapper.save(newHousehold);
-            household = newHousehold;
+            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
         }
 
         // 비밀번호 BCrypt 암호화
@@ -77,12 +75,12 @@ public class UserService {
         // 이메일로 사용자 조회
         User user = userMapper.findByEmail(req.getEmail());
         if (user == null) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // 비밀번호 비교 (평문 vs 암호화된 비밀번호)
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // JWT에 담을 사용자 정보 생성
@@ -104,6 +102,7 @@ public class UserService {
     // 1. DB에서 RT 삭제 → 2. AT/RT 쿠키 만료
     @Transactional
     public void signOut(Long userId, HttpServletResponse res) {
+
         // DB에서 RT 삭제
         userMapper.deleteRefreshTokenByUserId(userId);
 
@@ -121,24 +120,24 @@ public class UserService {
         // 쿠키에서 RT 추출
         String refreshToken = jwtTokenManager.getRefreshTokenFromCookie(req);
         if (refreshToken == null) {
-            throw new IllegalArgumentException("Refresh Token이 없습니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // RT 만료 여부 확인
         if (jwtTokenProvider.isTokenExpired(refreshToken)) {
-            throw new IllegalArgumentException("Refresh Token이 만료되었습니다. 다시 로그인해주세요");
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
         }
 
         // RT에서 사용자 정보 추출
         JwtUser jwtUser = jwtTokenProvider.getJwtUserFromToken(refreshToken);
         if (jwtUser == null) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // DB에 저장된 RT와 일치 여부 확인 (탈취 방지)
         AuthToken savedToken = userMapper.findRefreshTokenByUserId(jwtUser.getUserId());
         if (savedToken == null || !savedToken.getRefreshToken().equals(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // 새 AT 발급 후 쿠키 갱신
@@ -174,5 +173,4 @@ public class UserService {
 
         userMapper.saveRefreshToken(authToken);
     }
-
 }
