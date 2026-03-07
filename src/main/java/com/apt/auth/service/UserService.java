@@ -5,7 +5,7 @@ import com.apt.auth.mapper.UserMapper;
 import com.apt.common.JwtUser;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
-import com.apt.household.dto.Household;
+import com.apt.household.model.Household;
 import com.apt.household.mapper.HouseholdMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
