@@ -1,4 +1,4 @@
-package com.apt.auth.dto;
+package com.apt.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

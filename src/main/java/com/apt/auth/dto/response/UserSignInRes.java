@@ -1,4 +1,4 @@
-package com.apt.auth.dto;
+package com.apt.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

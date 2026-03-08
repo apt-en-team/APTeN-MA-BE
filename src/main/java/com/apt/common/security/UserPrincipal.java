@@ -1,4 +1,4 @@
-package com.apt.common;
+package com.apt.common.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

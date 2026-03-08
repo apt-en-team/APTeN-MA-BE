@@ -1,9 +1,9 @@
 package com.apt.config.oauth2;
 
-import com.apt.auth.mapper.UserMapper;
-import com.apt.auth.dto.AuthToken;
-import com.apt.common.JwtUser;
-import com.apt.common.UserPrincipal;
+import com.apt.auth.dto.request.AuthToken;
+import com.apt.auth.mapper.AuthMapper;
+import com.apt.common.security.JwtUser;
+import com.apt.common.security.UserPrincipal;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,8 +29,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     // RT 생성 (DB 저장용)
     private final JwtTokenProvider jwtTokenProvider;
 
-    // RT DB 저장
-    private final UserMapper userMapper;
+    // refresh_token 테이블 접근 (RT 저장/삭제)
+    private final AuthMapper authMapper;
 
     // 소셜 로그인 성공 후 리다이렉트할 Vue 앱 주소
     private static final String REDIRECT_URL = "http://localhost:5173/oauth2/callback";
@@ -47,15 +47,15 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         // AT/RT를 HttpOnly 쿠키로 발급
         jwtTokenManager.issue(response, jwtUser);
 
-        // RT를 DB에 저장 (AT 재발급 시 검증용)
+        // 기존 RT 삭제 후 새 RT DB 저장 (재로그인 시 중복 방지)
         String refreshToken = jwtTokenProvider.generateRefreshToken(jwtUser);
-        userMapper.deleteRefreshTokenByUserId(jwtUser.getUserId());
+        authMapper.deleteRefreshTokenByUserId(jwtUser.getUserId());
 
         AuthToken authToken = new AuthToken();
         authToken.setUserId(jwtUser.getUserId());
         authToken.setRefreshToken(refreshToken);
         authToken.setExpiredAt(LocalDateTime.now().plusDays(7));
-        userMapper.saveRefreshToken(authToken);
+        authMapper.saveRefreshToken(authToken);
 
         log.info("소셜 로그인 성공 - userId: {}, role: {}", jwtUser.getUserId(), jwtUser.getRole());
 

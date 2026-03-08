@@ -1,8 +1,8 @@
 package com.apt.config.security;
 
 import com.apt.config.jwt.ConstJwt;
-import com.apt.common.JwtUser;
-import com.apt.common.UserPrincipal;
+import com.apt.common.security.JwtUser;
+import com.apt.common.security.UserPrincipal;
 import com.apt.config.util.MyCookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

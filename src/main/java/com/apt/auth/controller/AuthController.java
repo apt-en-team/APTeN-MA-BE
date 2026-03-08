@@ -1,9 +1,12 @@
 package com.apt.auth.controller;
 
-import com.apt.auth.dto.*;
+import com.apt.auth.dto.request.LinkHouseholdReq;
+import com.apt.auth.dto.request.UserSignInReq;
+import com.apt.auth.dto.request.UserSignUpReq;
+import com.apt.auth.dto.response.UserSignInRes;
+import com.apt.auth.service.AuthService;
 import com.apt.common.response.ResultResponse;
-import com.apt.common.UserPrincipal;
-import com.apt.auth.service.UserService;
+import com.apt.common.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -12,21 +15,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-// 인증 관련 API 컨트롤러 (회원가입, 로그인, 로그아웃, 토큰 재발급)
+// 인증 관련 API 컨트롤러 (회원가입, 로그인, 로그아웃, 토큰 재발급, 소셜 연동)
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class UserController {
+public class AuthController {
 
-    // 인증 비즈니스 로직
-    private final UserService userService;
+    private final AuthService authService;
 
     // 회원가입 (POST /api/auth/register)
     // 인증 불필요 - SecurityConfig에서 permitAll 설정
     @PostMapping("/register")
     public ResultResponse<Void> register(@Valid @RequestBody UserSignUpReq req) {
-        userService.signUp(req);
+        authService.signUp(req);
         return new ResultResponse<>("회원가입 성공", null);
     }
 
@@ -35,7 +37,7 @@ public class UserController {
     @PostMapping("/login")
     public ResultResponse<UserSignInRes> login(@Valid @RequestBody UserSignInReq req,
                                                HttpServletResponse res) {
-        UserSignInRes result = userService.signIn(req, res);
+        UserSignInRes result = authService.signIn(req, res);
         return new ResultResponse<>("로그인 성공", result);
     }
 
@@ -44,7 +46,7 @@ public class UserController {
     @PostMapping("/logout")
     public ResultResponse<Void> logout(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                        HttpServletResponse res) {
-        userService.signOut(userPrincipal.getUserId(), res);
+        authService.signOut(userPrincipal.getUserId(), res);
         return new ResultResponse<>("로그아웃 성공", null);
     }
 
@@ -52,26 +54,8 @@ public class UserController {
     // 쿠키의 RT를 검증해 새 AT 발급
     @PostMapping("/refresh")
     public ResultResponse<Void> refresh(HttpServletRequest req, HttpServletResponse res) {
-        userService.refreshAccessToken(req, res);
+        authService.refreshAccessToken(req, res);
         return new ResultResponse<>("토큰 재발급 성공", null);
-    }
-
-    // 내 정보 조회 (GET /api/auth/me)
-    // 마이페이지에서 사용자 정보 확인용
-    @GetMapping("/me")
-    public ResultResponse<UserGetMeRes> getMe(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        UserGetMeRes result = userService.getMe(userPrincipal.getUserId());
-        return new ResultResponse<>("내 정보 조회 성공", result);
-    }
-
-    // 회원 탈퇴 (PATCH /api/auth/deactivate)
-    // 본인이 직접 탈퇴 - is_deleted=1, deleted_at=NOW() 소프트 딜리트
-    // 탈퇴 후 쿠키 만료 → 자동 로그아웃
-    @PatchMapping("/deactivate")
-    public ResultResponse<Void> deactivate(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                                           HttpServletResponse res) {
-        userService.deactivate(userPrincipal.getUserId(), res);
-        return new ResultResponse<>("탈퇴 처리 성공", null);
     }
 
     // 소셜 로그인 후 동호수 연결 (PATCH /api/auth/link-household)
@@ -79,16 +63,15 @@ public class UserController {
     @PatchMapping("/link-household")
     public ResultResponse<Void> linkHousehold(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                               @Valid @RequestBody LinkHouseholdReq req) {
-        userService.linkHousehold(userPrincipal.getUserId(), req);
+        authService.linkHousehold(userPrincipal.getUserId(), req);
         return new ResultResponse<>("동호수 연결 성공", null);
     }
 
     // 이메일 중복 확인 (GET /api/auth/check-email?email=xxx)
-    // 회원가입 전 이메일 사용 가능 여부 확인
-    // 인증 불필요 - SecurityConfig에서 permitAll 설정
+    // 회원가입 전 이메일 사용 가능 여부 확인, 인증 불필요
     @GetMapping("/check-email")
     public ResultResponse<Void> checkEmail(@RequestParam String email) {
-        userService.checkEmail(email);
+        authService.checkEmail(email);
         return new ResultResponse<>("사용 가능한 이메일입니다", null);
     }
 }
