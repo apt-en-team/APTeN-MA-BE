@@ -3,6 +3,7 @@ package com.apt.household.dto.response;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 
 // API-014 세대 목록 조회 / API-015 세대 등록 / API-016 세대 수정 응답 DTO
 // MyBatis SELECT 결과를 담는 응답 객체
@@ -20,7 +21,7 @@ public class HouseholdRes {
     private String ho;
 
     // 세대 등록 일시
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     // 현재 입주 상태: '입주' / '퇴거' / '공실'
     // household_history 테이블에서 가장 최근 이력의 status 값
@@ -29,4 +30,8 @@ public class HouseholdRes {
 
     // 해당 세대에 등록된 차량 수 (vehicle 테이블 COUNT)
     private int carCount;
+
+    //승인 요층 세대 수
+    private int pendingCount;
+
 }

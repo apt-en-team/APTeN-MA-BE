@@ -17,35 +17,73 @@
         - carCount: vehicle 테이블에서 해당 세대 차량 수 COUNT
         - LIMIT/OFFSET 으로 페이징 처리
     -->
+
     <select id="findAll" resultType="com.apt.household.dto.response.HouseholdRes">
         SELECT
-            h.household_id AS householdId,
-            h.dong,
-            h.ho,
-            h.created_at   AS createdAt,
-            COALESCE((
-                         SELECT hh.status
-                         FROM   household_history hh
-                         WHERE  hh.household_id = h.household_id
-                         ORDER  BY hh.changed_at DESC
-                     LIMIT  1
-                ), '공실')      AS status,
-            (
-                SELECT COUNT(*)
-                FROM   vehicle v
-                WHERE  v.household_id = h.household_id
-            )               AS carCount
-        FROM  household h
-        ORDER BY h.dong, CAST(h.ho AS UNSIGNED)
-            LIMIT #{size} OFFSET #{offset}
+        h.household_id AS householdId,
+        h.dong, h.ho,
+        h.created_at AS createdAt,
+        COALESCE((
+        SELECT hh.status FROM household_history hh
+        WHERE hh.household_id = h.household_id
+        ORDER BY hh.changed_at DESC LIMIT 1
+        ), '공실') AS status,
+        (SELECT COUNT(*) FROM vehicle v WHERE v.household_id = h.household_id) AS carCount,
+        (
+        SELECT COUNT(*)
+        FROM user u
+        WHERE u.household_id = h.household_id
+        AND u.status = 'PENDING'
+        AND u.is_deleted = false
+        ) AS pendingCount
+        FROM household h
+        <where>
+            <if test="dong != null and dong != ''">
+                h.dong = #{dong}
+            </if>
+            <if test="ho != null and ho != ''">
+                AND h.ho LIKE CONCAT('%', #{ho}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND COALESCE((
+                SELECT hh.status FROM household_history hh
+                WHERE hh.household_id = h.household_id
+                ORDER BY hh.changed_at DESC LIMIT 1
+                ), '공실') = #{status}
+            </if>
+        </where>
+        ORDER BY pendingCount DESC, h.dong, CAST(h.ho AS UNSIGNED)
+        LIMIT #{startIdx}, #{size}
     </select>
 
-    <!--
-        ■ 전체 세대 수 조회
-        - totalPages 계산용: ceil(countAll / size)
-    -->
-    <select id="countAll" resultType="int">
-        SELECT COUNT(*) FROM household
+    <select id="findPendingUsers" resultType="com.apt.household.dto.response.PendingUserDto">
+        SELECT user_id AS userId, name, phone
+        FROM user
+        WHERE household_id = #{householdId}
+          AND status = 'PENDING'
+          AND is_deleted = false
+    </select>
+
+    <select id="maxPage" resultType="int">
+        SELECT CEIL(COUNT(1) / #{size})
+        FROM household h
+        <where>
+            <if test="dong != null and dong != ''">
+                h.dong = #{dong}
+            </if>
+            <if test="status != null and status != ''">
+                AND COALESCE((
+                SELECT hh.status FROM household_history hh
+                WHERE hh.household_id = h.household_id
+                ORDER BY hh.changed_at DESC LIMIT 1
+                ), '공실') = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 동 목록 전체 조회 (드롭다운용) -->
+    <select id="findAllDongs" resultType="String">
+        SELECT DISTINCT dong FROM household ORDER BY dong
     </select>
 
     <!--
@@ -142,9 +180,21 @@
     -->
     <insert id="insertHistory" useGeneratedKeys="true" keyProperty="historyId">
         INSERT INTO household_history (household_id, user_id, status, changed_at)
-        VALUES (#{householdId}, #{userId}, #{status}, NOW())
+        VALUES (
+        #{householdId},
+        #{userId},
+        #{status},
+        NOW()
+        )
     </insert>
 
+    <!-- 퇴거회원 householdId -> null 변경 -->
+    <update id="clearUserHousehold">
+        UPDATE user
+        SET household_id = NULL,
+            updated_at   = NOW()
+        WHERE user_id = #{userId}
+    </update>
     <!--
         ■ 세대별 이력 목록 조회
         - user 테이블 LEFT JOIN 으로 입주민 이름(userName) 함께 조회
@@ -163,6 +213,15 @@
                    LEFT   JOIN user u ON hh.user_id = u.user_id
         WHERE  hh.household_id = #{householdId}
         ORDER  BY hh.changed_at DESC
+    </select>
+
+    <!-- 세대 등록 입주민 조회 (APPROVED 상태 유저) -->
+    <select id="findResidents" resultType="com.apt.household.dto.response.ResidentDto">
+        SELECT user_id AS userId, name, phone, email
+        FROM user
+        WHERE household_id = #{householdId}
+          AND status = 'APPROVED'
+          AND is_deleted = false
     </select>
 
     <!--
@@ -187,25 +246,19 @@
             SUM(CASE WHEN sub.latest_status IS NULL
                 OR sub.latest_status = '퇴거'  THEN 1 ELSE 0 END)        AS `empty`,
             (
-                SELECT COUNT(*)
+                SELECT COUNT(DISTINCT household_id)
                 FROM   household_history
                 WHERE  status = '입주'
-                           AND  YEAR(changed_at)  = YEAR(NOW())
-                  AND  MONTH(changed_at) = MONTH(NOW())
+                    AND  YEAR(changed_at)  = YEAR(NOW())
+                    AND  MONTH(changed_at) = MONTH(NOW())
             )                                                                    AS moveIn,
             (
-        SELECT COUNT(*)
+        SELECT COUNT(DISTINCT household_id)
         FROM   household_history
         WHERE  status = '퇴거'
           AND  YEAR(changed_at)  = YEAR(NOW())
           AND  MONTH(changed_at) = MONTH(NOW())
-            )                                                                    AS moveOut,
-            (
-        SELECT COUNT(*)
-        FROM   household_history
-        WHERE  YEAR(changed_at)  = YEAR(NOW())
-          AND  MONTH(changed_at) = MONTH(NOW())
-            )                                                                    AS monthNew
+            )                                                                    AS moveOut
         FROM (
             /* 각 세대의 가장 최신 이력 status 를 서브쿼리로 추출 */
             SELECT

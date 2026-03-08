@@ -1,6 +1,7 @@
 package com.apt.household.controller;
 
 import com.apt.common.response.ResultResponse;
+import com.apt.household.dto.request.HouseholdGetReq;
 import com.apt.household.dto.request.HouseholdHistoryReq;
 import com.apt.household.dto.request.HouseholdReq;
 import com.apt.household.service.HouseholdService;
@@ -25,11 +26,23 @@ public class HouseholdController {
     // GET /api/admin/households?page=0&size=10
     // 페이징 처리된 세대 목록 반환 (동/호/상태/차량수 포함)
     @GetMapping("/households")
-    public ResultResponse<?> getHouseholds(
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResultResponse<?> getHouseholds(HouseholdGetReq req) {
+        return ResultResponse.success("조회 성공", householdService.getHouseholds(req));
+    }
 
-        return ResultResponse.success("조회 성공", householdService.getHouseholds(page, size));
+    @GetMapping("/households/maxPage")
+    public ResultResponse<?> getMaxPage(HouseholdGetReq req) {
+        return ResultResponse.success("최대 페이지 조회 성공", householdService.getMaxPage(req));
+    }
+
+    @GetMapping("/households/dongs")
+    public ResultResponse<?> getAllDongs() {
+        return ResultResponse.success("동 목록 조회 성공", householdService.getAllDongs());
+    }
+
+    @GetMapping("/households/{householdId}/pending")
+    public ResultResponse<?> getPendingUsers(@PathVariable Long householdId) {
+        return ResultResponse.success("대기 유저 조회 성공", householdService.getPendingUsers(householdId));
     }
 
     // ── 통계 조회 (프론트 상단 카드용) ───────────────────────────
@@ -90,4 +103,11 @@ public class HouseholdController {
     public ResultResponse<?> getHistory(@PathVariable Long id) {
         return ResultResponse.success("이력 조회 성공", householdService.getHistory(id));
     }
+
+    //모달 등록 입주민 조회
+    @GetMapping("/households/{householdId}/residents")
+    public ResultResponse<?> getResidents(@PathVariable Long householdId) {
+        return ResultResponse.success("입주민 조회 성공", householdService.getResidents(householdId));
+    }
+
 }

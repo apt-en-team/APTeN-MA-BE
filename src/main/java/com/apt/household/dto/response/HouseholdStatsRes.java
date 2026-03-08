@@ -10,22 +10,19 @@ import lombok.Setter;
 public class HouseholdStatsRes {
 
     // 전체 세대 수 (household 테이블 전체 COUNT)
-    private Integer total;;
+    private Long total;;
 
     // 입주 중인 세대 수 (household_history 최신 status = '입주')
-    private Integer occupied;
+    private Long occupied;
 
     // 공실 세대 수 (이력 없거나 최신 status = '퇴거')
-    private Integer empty;
+    private Long empty;
 
     // 이번 달 전입 건수 (household_history status='입주' AND 이번달)
-    private Integer moveIn;
+    private Long moveIn;
 
     // 이번 달 전출 건수 (household_history status='퇴거' AND 이번달)
-    private Integer moveOut;
-
-    // 이번 달 전체 이력 건수 (moveIn + moveOut 합계)
-    private Integer monthNew;
+    private Long moveOut;
 }
 
 

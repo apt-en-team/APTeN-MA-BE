@@ -2,11 +2,10 @@ package com.apt.household.service;
 
 import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
+import com.apt.household.dto.request.HouseholdGetReq;
 import com.apt.household.dto.request.HouseholdHistoryReq;
 import com.apt.household.dto.request.HouseholdReq;
-import com.apt.household.dto.response.HouseholdHistoryRes;
-import com.apt.household.dto.response.HouseholdRes;
-import com.apt.household.dto.response.HouseholdStatsRes;
+import com.apt.household.dto.response.*;
 import com.apt.household.mapper.HouseholdMapper;
 import com.apt.household.model.Household;
 import com.apt.household.model.HouseholdHistory;
@@ -28,22 +27,18 @@ public class HouseholdService {
     private final HouseholdMapper householdMapper;
 
     // ── API-014: 세대 목록 조회 (페이징) ─────────────────────────
-    // page: 현재 페이지 번호 (0부터 시작)
-    // size: 페이지당 데이터 개수
-    // 반환: { content, page, size, totalElements, totalPages }
-    public Map<String, Object> getHouseholds(int page, int size) {
-        int offset         = page * size;
-        List<HouseholdRes> content       = householdMapper.findAll(offset, size);
-        int                totalElements = householdMapper.countAll();
-        int                totalPages    = (int) Math.ceil((double) totalElements / size);
+    public List<HouseholdRes> getHouseholds(HouseholdGetReq req) {
+        return householdMapper.findAll(req);
+    }
+    public int getMaxPage(HouseholdGetReq req) {
+        return householdMapper.maxPage(req);
+    }
+    public List<String> getAllDongs() {
+        return householdMapper.findAllDongs();
+    }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("content",       content);
-        result.put("page",          page);
-        result.put("size",          size);
-        result.put("totalElements", totalElements);
-        result.put("totalPages",    totalPages);
-        return result;
+    public List<PendingUserDto> getPendingUsers(Long householdId) {
+        return householdMapper.findPendingUsers(householdId);
     }
 
     // ── 통계 조회 (프론트 상단 카드용) ───────────────────────────
@@ -129,19 +124,21 @@ public class HouseholdService {
     @Transactional
     public HouseholdHistoryRes createHistory(Long householdId, HouseholdHistoryReq req) {
 
-        // 세대 존재 여부 확인
         if (householdMapper.findById(householdId) == null) {
             throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
         }
 
-        // HouseholdHistory 객체 생성 후 INSERT
         HouseholdHistory history = new HouseholdHistory();
         history.setHouseholdId(householdId);
         history.setUserId(req.getUserId());
-        history.setStatus(req.getStatus());   // '입주' 또는 '퇴거'
-        householdMapper.insertHistory(history);  // INSERT 후 historyId 자동 주입
+        history.setStatus(req.getStatus());
+        householdMapper.insertHistory(history);
 
-        // 응답 객체 생성
+        // ← 퇴거 시 해당 유저 household_id → NULL
+        if ("퇴거".equals(req.getStatus()) && req.getUserId() != null) {
+            householdMapper.clearUserHousehold(req.getUserId());
+        }
+
         HouseholdHistoryRes res = new HouseholdHistoryRes();
         res.setHistoryId(history.getHistoryId());
         res.setHouseholdId(history.getHouseholdId());
@@ -161,6 +158,10 @@ public class HouseholdService {
         }
 
         return householdMapper.findHistoryByHouseholdId(householdId);
+    }
+    // 모달 등록입주민 내역
+    public List<ResidentDto> getResidents(Long householdId) {
+        return householdMapper.findResidents(householdId);
     }
 }
 

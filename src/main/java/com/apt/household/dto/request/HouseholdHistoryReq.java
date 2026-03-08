@@ -1,7 +1,6 @@
 package com.apt.household.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,8 +10,7 @@ import lombok.Setter;
 @Setter
 public class HouseholdHistoryReq {
 
-    // 입주 또는 퇴거하는 입주민 ID (필수값)
-    @NotNull(message = "회원 ID를 입력해주세요")
+    // 입주 또는 퇴거하는 입주민 ID
     private Long userId;
 
     // 변경 상태 (필수값): '입주' 또는 '퇴거'
