@@ -84,4 +84,13 @@
         WHERE user_id = #{userId}
     </update>
 
+    <!-- 소셜 로그인 후 동호수 연결 + status APPROVED 처리 -->
+    <update id="linkHousehold">
+        UPDATE user
+        SET household_id = #{householdId},
+            phone = #{phone},
+            status = 'APPROVED',
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
 </mapper>

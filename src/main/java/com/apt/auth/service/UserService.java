@@ -7,8 +7,8 @@ import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
-import com.apt.household.model.Household;
 import com.apt.household.mapper.HouseholdMapper;
+import com.apt.household.model.Household;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -159,6 +159,29 @@ public class UserService {
         userMapper.deleteRefreshTokenByUserId(userId);
         jwtTokenManager.expireCookies(res);
         log.info("회원 탈퇴 완료 - userId: {}", userId);
+    }
+
+    // 소셜 로그인 후 동호수 연결 + 승인 처리
+    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. status APPROVED 변경
+    @Transactional
+    public void linkHousehold(Long userId, LinkHouseholdReq req) {
+
+        // 동/호로 세대 조회, 없으면 가입 불가
+        Household household = householdMapper.findByDongAndHo(req.getDong(), req.getHo());
+        if (household == null) {
+            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
+        }
+
+        // household_id 연결 + status APPROVED 업데이트
+        userMapper.linkHousehold(userId, household.getHouseholdId(), req.getPhone());
+        log.info("동호수 연결 완료 - userId: {}, householdId: {}", userId, household.getHouseholdId());
+    }
+
+    // 이메일 중복 확인 (회원가입 전 사전 체크용)
+    public void checkEmail(String email) {
+        if (userMapper.findByEmail(email) != null) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 
     // RT를 DB에 저장 (기존 RT는 삭제 후 새로 저장)

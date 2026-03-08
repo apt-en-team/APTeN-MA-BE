@@ -5,6 +5,7 @@ import com.apt.auth.dto.User;
 import com.apt.auth.dto.UserGetMeRes;
 import com.apt.auth.dto.UserSignUpReq;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 // user, refresh_token 테이블 접근 MyBatis Mapper
 @Mapper
@@ -39,4 +40,8 @@ public interface UserMapper {
 
     // 소프트 딜리트 (is_deleted=1, deleted_at=NOW())
     int softDeleteUser(Long userId);
+
+    // @Param: 파라미터가 2개 이상일 때 MyBatis가 구분할 수 있도록 이름 지정
+    // 소셜 로그인 후 동호수 연결 + status APPROVED 처리
+    int linkHousehold(@Param("userId") Long userId, @Param("householdId") Long householdId, @Param("phone") String phone);
 }

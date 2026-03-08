@@ -1,9 +1,6 @@
 package com.apt.auth.controller;
 
-import com.apt.auth.dto.UserGetMeRes;
-import com.apt.auth.dto.UserSignInReq;
-import com.apt.auth.dto.UserSignInRes;
-import com.apt.auth.dto.UserSignUpReq;
+import com.apt.auth.dto.*;
 import com.apt.common.response.ResultResponse;
 import com.apt.common.UserPrincipal;
 import com.apt.auth.service.UserService;
@@ -75,5 +72,23 @@ public class UserController {
                                            HttpServletResponse res) {
         userService.deactivate(userPrincipal.getUserId(), res);
         return new ResultResponse<>("탈퇴 처리 성공", null);
+    }
+
+    // 소셜 로그인 후 동호수 연결 (PATCH /api/auth/link-household)
+    // 소셜 로그인 신규 유저가 동호수 입력 시 household 연결 + APPROVED 처리
+    @PatchMapping("/link-household")
+    public ResultResponse<Void> linkHousehold(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                              @Valid @RequestBody LinkHouseholdReq req) {
+        userService.linkHousehold(userPrincipal.getUserId(), req);
+        return new ResultResponse<>("동호수 연결 성공", null);
+    }
+
+    // 이메일 중복 확인 (GET /api/auth/check-email?email=xxx)
+    // 회원가입 전 이메일 사용 가능 여부 확인
+    // 인증 불필요 - SecurityConfig에서 permitAll 설정
+    @GetMapping("/check-email")
+    public ResultResponse<Void> checkEmail(@RequestParam String email) {
+        userService.checkEmail(email);
+        return new ResultResponse<>("사용 가능한 이메일입니다", null);
     }
 }
