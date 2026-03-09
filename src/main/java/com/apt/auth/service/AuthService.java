@@ -29,12 +29,15 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class AuthService {
 
-    // user, auth_token 테이블 접근
+    // user 테이블 접근 (회원 조회, 등록)
     private final UserMapper userMapper;
 
-    // household 테이블 접근 (동/호 조회 및 등록)
+    // refresh_token 테이블 접근
+    private final AuthMapper authMapper;
+
+    // household 테이블 접근 (동/호 조회)
     private final HouseholdMapper householdMapper;
 
     // BCrypt 비밀번호 암호화/비교
@@ -74,19 +77,19 @@ public class UserService {
     }
 
     // 로그인 처리
-    // 1. 이메일로 사용자 조회 → 2. 비밀번호 검증 → 3. AT/RT 발급 → 4. RT를 DB에 저장
+    // 1. 이메일로 사용자 조회 → 2. 비밀번호 검증 → 3. AT/RT 발급 → 4. RT DB 저장
     @Transactional
     public UserSignInRes signIn(UserSignInReq req, HttpServletResponse res) {
 
         // 이메일로 사용자 조회
         User user = userMapper.findByEmail(req.getEmail());
         if (user == null) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // 비밀번호 비교 (평문 vs 암호화된 비밀번호)
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // JWT에 담을 사용자 정보 생성
@@ -186,5 +189,4 @@ public class UserService {
 
         authMapper.saveRefreshToken(authToken);
     }
-
 }
