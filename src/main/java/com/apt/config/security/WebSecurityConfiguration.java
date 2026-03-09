@@ -53,6 +53,7 @@ public class WebSecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/check-email").permitAll()
 
                         // 소셜 로그인 콜백 (OAuth2)
                         .requestMatchers("/login/oauth2/**", "/oauth2/**").permitAll()

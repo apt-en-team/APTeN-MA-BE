@@ -1,6 +1,7 @@
 package com.apt.common.exception;
 
 import com.apt.common.response.ResultResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // @RestControllerAdvice → 모든 Controller 에서 발생하는 예외를 여기서 일괄 처리
 // 예외 발생 시 ResultResponse.error("에러메시지") 형태로 응답 반환
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     // CustomException 처리
@@ -43,6 +45,7 @@ public class GlobalExceptionHandler {
     // 그 외 모든 예외 처리 (예상치 못한 서버 오류)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResultResponse<?>> handleException(Exception e) {
+        log.error("서버 오류 발생", e);
         return ResponseEntity
                 .status(500)
                 .body(ResultResponse.error("서버 오류가 발생했습니다"));

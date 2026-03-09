@@ -1,9 +1,9 @@
 package com.apt.config.oauth2;
 
-import com.apt.auth.dto.User;
-import com.apt.auth.mapper.UserMapper;
-import com.apt.common.JwtUser;
-import com.apt.common.UserPrincipal;
+import com.apt.user.model.User;
+import com.apt.user.mapper.UserMapper;
+import com.apt.common.security.JwtUser;
+import com.apt.common.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
