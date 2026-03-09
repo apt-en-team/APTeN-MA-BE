@@ -53,36 +53,6 @@ public class HouseholdController {
         return ResultResponse.success("통계 조회 성공", householdService.getStats());
     }
 
-    // ── API-015: 세대 등록 ────────────────────────────────────────
-    // POST /api/admin/households
-    // Body: { dong, ho }
-    // 동/호 중복 시 400 에러 반환
-    @PostMapping("/households")
-    public ResultResponse<?> createHousehold(@Valid @RequestBody HouseholdReq req) {
-        return ResultResponse.success("세대 등록 성공", householdService.createHousehold(req));
-    }
-
-    // ── API-016: 세대 수정 ────────────────────────────────────────
-    // PUT /api/admin/households/{id}
-    // Body: { dong, ho }
-    // 세대가 없으면 404 에러 반환
-    @PutMapping("/households/{id}")
-    public ResultResponse<?> updateHousehold(
-            @PathVariable Long id,
-            @Valid @RequestBody HouseholdReq req) {
-
-        return ResultResponse.success("세대 수정 성공", householdService.updateHousehold(id, req));
-    }
-
-    // ── API-017: 세대 삭제 ────────────────────────────────────────
-    // DELETE /api/admin/households/{id}
-    // 소속 회원(is_deleted=0)이 있으면 400 에러 반환
-    // 세대가 없으면 404 에러 반환
-    @DeleteMapping("/households/{id}")
-    public ResultResponse<?> deleteHousehold(@PathVariable Long id) {
-        householdService.deleteHousehold(id);
-        return ResultResponse.success("세대 삭제 성공", null);
-    }
 
     // ── API-018: 입주/퇴거 이력 등록 ─────────────────────────────
     // POST /api/admin/households/{id}/history

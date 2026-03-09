@@ -42,16 +42,10 @@ public interface HouseholdMapper {
     //승인요청
     List<PendingUserDto> findPendingUsers(@Param("householdId") Long householdId);
 
-    // ── CRUD ─────────────────────────────────────────────────────
+    // ── user ─────────────────────────────────────────────────────
 
     // 세대 등록 (useGeneratedKeys=true → 생성된 PK가 household.householdId 에 자동 주입)
     void save(Household household);
-
-    // 세대 수정 (dong, ho 변경)
-    void update(Household household);
-
-    // 세대 삭제 (소속 회원 없을 때만 호출)
-    void delete(@Param("householdId") Long householdId);
 
     // ── 이력 ─────────────────────────────────────────────────────
 

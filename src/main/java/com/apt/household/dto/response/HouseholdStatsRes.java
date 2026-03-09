@@ -23,6 +23,9 @@ public class HouseholdStatsRes {
 
     // 이번 달 전출 건수 (household_history status='퇴거' AND 이번달)
     private Long moveOut;
+
+    // 30일 이상 공실 건수
+    private Long needCare;
 }
 
 
