@@ -1,9 +1,8 @@
 package com.apt.household.mapper;
 
+import com.apt.household.dto.request.HouseholdGetReq;
 import com.apt.household.dto.request.HouseholdHistoryReq;
-import com.apt.household.dto.response.HouseholdHistoryRes;
-import com.apt.household.dto.response.HouseholdRes;
-import com.apt.household.dto.response.HouseholdStatsRes;
+import com.apt.household.dto.response.*;
 import com.apt.household.model.Household;
 import com.apt.household.model.HouseholdHistory;
 import org.apache.ibatis.annotations.Mapper;
@@ -20,11 +19,9 @@ public interface HouseholdMapper {
 
     // 세대 목록 조회 (페이징)
     // offset: 시작 위치, size: 가져올 개수
-    List<HouseholdRes> findAll(@Param("offset") int offset,
-                               @Param("size")   int size);
-
-    // 전체 세대 수 (페이징의 totalPages 계산에 사용)
-    int countAll();
+    List<HouseholdRes> findAll(HouseholdGetReq req);
+    int maxPage(HouseholdGetReq req);
+    List<String> findAllDongs();
 
     // 세대 단건 조회 (존재 여부 확인 및 수정/삭제 전 검증에 사용)
     Household findById(@Param("householdId") Long householdId);
@@ -42,25 +39,27 @@ public interface HouseholdMapper {
     // 0이어야 세대 삭제 가능 (소속 회원 있으면 삭제 불가)
     int countUsersByHouseholdId(@Param("householdId") Long householdId);
 
-    // ── CRUD ─────────────────────────────────────────────────────
+    //승인요청
+    List<PendingUserDto> findPendingUsers(@Param("householdId") Long householdId);
+
+    // ── user ─────────────────────────────────────────────────────
 
     // 세대 등록 (useGeneratedKeys=true → 생성된 PK가 household.householdId 에 자동 주입)
     void save(Household household);
-
-    // 세대 수정 (dong, ho 변경)
-    void update(Household household);
-
-    // 세대 삭제 (소속 회원 없을 때만 호출)
-    void delete(@Param("householdId") Long householdId);
 
     // ── 이력 ─────────────────────────────────────────────────────
 
     // 입주/퇴거 이력 등록
     void insertHistory(HouseholdHistory history);
 
+    //퇴거회원 householdId -> null 변경
+    void clearUserHousehold(@Param("userId") Long userId);
+
     // 세대별 이력 목록 조회 (최신순 정렬, user.name JOIN)
     List<HouseholdHistoryRes> findHistoryByHouseholdId(
             @Param("householdId") Long householdId);
+    // 모달 등록입주민 내역
+    List<ResidentDto> findResidents(@Param("householdId") Long householdId);
 
     // ── 통계 ─────────────────────────────────────────────────────
 
