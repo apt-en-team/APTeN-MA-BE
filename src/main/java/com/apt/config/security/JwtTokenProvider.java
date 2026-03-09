@@ -1,7 +1,7 @@
 package com.apt.config.security;
 
 import com.apt.config.jwt.ConstJwt;
-import com.apt.common.JwtUser;
+import com.apt.common.security.JwtUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

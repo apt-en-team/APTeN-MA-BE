@@ -1,8 +1,7 @@
-package com.apt.household.dto;
+package com.apt.household.model;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 // DB household 테이블과 매핑되는 Entity 클래스

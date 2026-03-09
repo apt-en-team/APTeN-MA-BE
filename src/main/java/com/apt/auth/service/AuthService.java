@@ -1,12 +1,20 @@
 package com.apt.auth.service;
 
-import com.apt.auth.dto.*;
-import com.apt.auth.mapper.UserMapper;
-import com.apt.common.JwtUser;
+import com.apt.auth.dto.request.AuthToken;
+import com.apt.auth.dto.request.LinkHouseholdReq;
+import com.apt.auth.dto.request.UserSignInReq;
+import com.apt.auth.dto.request.UserSignUpReq;
+import com.apt.auth.dto.response.UserSignInRes;
+import com.apt.auth.mapper.AuthMapper;
+import com.apt.common.exception.CustomException;
+import com.apt.common.exception.ErrorCode;
+import com.apt.common.security.JwtUser;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
-import com.apt.household.dto.Household;
 import com.apt.household.mapper.HouseholdMapper;
+import com.apt.household.model.Household;
+import com.apt.user.mapper.UserMapper;
+import com.apt.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +29,15 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class AuthService {
 
-    // user, auth_token 테이블 접근
+    // user 테이블 접근 (회원 조회, 등록)
     private final UserMapper userMapper;
 
-    // household 테이블 접근 (동/호 조회 및 등록)
+    // refresh_token 테이블 접근
+    private final AuthMapper authMapper;
+
+    // household 테이블 접근 (동/호 조회)
     private final HouseholdMapper householdMapper;
 
     // BCrypt 비밀번호 암호화/비교
@@ -39,23 +50,19 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입 처리
-    // 1. 이메일 중복 확인 → 2. 세대 조회 또는 생성 → 3. 비밀번호 암호화 → 4. 사용자 등록
+    // 1. 이메일 중복 확인 → 2. 세대 조회 → 3. 비밀번호 암호화 → 4. 사용자 등록
     @Transactional
     public void signUp(UserSignUpReq req) {
 
         // 이메일 중복 확인
         if (userMapper.findByEmail(req.getEmail()) != null) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다");
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        // 동/호로 세대 조회, 없으면 새로 등록
+        // 동/호로 세대 조회, 없으면 가입 불가
         Household household = householdMapper.findByDongAndHo(req.getDong(), req.getHo());
         if (household == null) {
-            Household newHousehold = new Household();
-            newHousehold.setDong(req.getDong());
-            newHousehold.setHo(req.getHo());
-            householdMapper.save(newHousehold);
-            household = newHousehold;
+            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
         }
 
         // 비밀번호 BCrypt 암호화
@@ -70,19 +77,19 @@ public class UserService {
     }
 
     // 로그인 처리
-    // 1. 이메일로 사용자 조회 → 2. 비밀번호 검증 → 3. AT/RT 발급 → 4. RT를 DB에 저장
+    // 1. 이메일로 사용자 조회 → 2. 비밀번호 검증 → 3. AT/RT 발급 → 4. RT DB 저장
     @Transactional
     public UserSignInRes signIn(UserSignInReq req, HttpServletResponse res) {
 
         // 이메일로 사용자 조회
         User user = userMapper.findByEmail(req.getEmail());
         if (user == null) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // 비밀번호 비교 (평문 vs 암호화된 비밀번호)
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // JWT에 담을 사용자 정보 생성
@@ -104,8 +111,9 @@ public class UserService {
     // 1. DB에서 RT 삭제 → 2. AT/RT 쿠키 만료
     @Transactional
     public void signOut(Long userId, HttpServletResponse res) {
+
         // DB에서 RT 삭제
-        userMapper.deleteRefreshTokenByUserId(userId);
+        authMapper.deleteRefreshTokenByUserId(userId);
 
         // AT/RT 쿠키 즉시 만료
         jwtTokenManager.expireCookies(res);
@@ -114,31 +122,31 @@ public class UserService {
     }
 
     // AT 만료 시 RT로 AT 재발급
-    // 1. 쿠키에서 RT 추출 → 2. DB에 저장된 RT와 비교 → 3. 새 AT 발급
+    // 1. 쿠키에서 RT 추출 → 2. DB RT와 비교 → 3. 새 AT 발급
     @Transactional
     public void refreshAccessToken(HttpServletRequest req, HttpServletResponse res) {
 
         // 쿠키에서 RT 추출
         String refreshToken = jwtTokenManager.getRefreshTokenFromCookie(req);
         if (refreshToken == null) {
-            throw new IllegalArgumentException("Refresh Token이 없습니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // RT 만료 여부 확인
         if (jwtTokenProvider.isTokenExpired(refreshToken)) {
-            throw new IllegalArgumentException("Refresh Token이 만료되었습니다. 다시 로그인해주세요");
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
         }
 
         // RT에서 사용자 정보 추출
         JwtUser jwtUser = jwtTokenProvider.getJwtUserFromToken(refreshToken);
         if (jwtUser == null) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // DB에 저장된 RT와 일치 여부 확인 (탈취 방지)
-        AuthToken savedToken = userMapper.findRefreshTokenByUserId(jwtUser.getUserId());
+        AuthToken savedToken = authMapper.findRefreshTokenByUserId(jwtUser.getUserId());
         if (savedToken == null || !savedToken.getRefreshToken().equals(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // 새 AT 발급 후 쿠키 갱신
@@ -146,25 +154,32 @@ public class UserService {
         log.info("AT 재발급 완료 - userId: {}", jwtUser.getUserId());
     }
 
-    // 마이페이지 내 정보 조회
-    public UserGetMeRes getMe(Long userId) {
-        return userMapper.findById(userId);
+    // 소셜 로그인 후 동호수 연결 + 승인 처리
+    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. status APPROVED 변경
+    @Transactional
+    public void linkHousehold(Long userId, LinkHouseholdReq req) {
+
+        // 동/호로 세대 조회, 없으면 연결 불가
+        Household household = householdMapper.findByDongAndHo(req.getDong(), req.getHo());
+        if (household == null) {
+            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
+        }
+
+        // household_id 연결 + status APPROVED 업데이트
+        userMapper.linkHousehold(userId, household.getHouseholdId(), req.getPhone());
+        log.info("동호수 연결 완료 - userId: {}, householdId: {}", userId, household.getHouseholdId());
     }
 
-    // 회원 탈퇴 (소프트 딜리트)
-    // 1. is_deleted=1, deleted_at=NOW() 업데이트
-    // 2. RT DB 삭제 → 3. 쿠키 만료 → 자동 로그아웃
-    @Transactional
-    public void deactivate(Long userId, HttpServletResponse res) {
-        userMapper.softDeleteUser(userId);
-        userMapper.deleteRefreshTokenByUserId(userId);
-        jwtTokenManager.expireCookies(res);
-        log.info("회원 탈퇴 완료 - userId: {}", userId);
+    // 이메일 중복 확인 (회원가입 전 사전 체크용)
+    public void checkEmail(String email) {
+        if (userMapper.findByEmail(email) != null) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 
     // RT를 DB에 저장 (기존 RT는 삭제 후 새로 저장)
     private void saveRefreshToken(Long userId, String refreshToken) {
-        userMapper.deleteRefreshTokenByUserId(userId);
+        authMapper.deleteRefreshTokenByUserId(userId);
 
         AuthToken authToken = new AuthToken();
         authToken.setUserId(userId);
@@ -172,7 +187,6 @@ public class UserService {
         // RT 만료 시간 (7일)
         authToken.setExpiredAt(LocalDateTime.now().plusDays(7));
 
-        userMapper.saveRefreshToken(authToken);
+        authMapper.saveRefreshToken(authToken);
     }
-
 }
