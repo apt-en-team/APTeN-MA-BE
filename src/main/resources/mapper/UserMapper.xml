@@ -21,9 +21,20 @@
     <!-- 이메일로 사용자 조회 (로그인, 중복 체크) -->
     <!-- is_deleted=1 탈퇴 계정은 조회 안 됨 → 로그인 불가 -->
     <select id="findByEmail" resultType="com.apt.user.model.User">
-        SELECT user_id, household_id, email, password, name, phone,
-               role, status, approved_by, approved_at,
-               provider, provider_id, created_at, updated_at
+        SELECT user_id,
+               household_id,
+               email,
+               password,
+               name,
+               phone,
+               role,
+               status,
+               approved_by,
+               approved_at,
+               provider,
+               provider_id,
+               created_at,
+               updated_at
         FROM user
         WHERE email = #{email}
           AND is_deleted = 0
@@ -31,8 +42,16 @@
 
     <!-- userId로 사용자 조회 (마이페이지) -->
     <select id="findById" resultType="com.apt.user.dto.response.UserGetMeRes">
-        SELECT u.user_id, u.email, u.name, u.phone, u.role, u.status,
-               u.household_id, h.dong, h.ho, u.provider
+        SELECT u.user_id,
+               u.email,
+               u.name,
+               u.phone,
+               u.role,
+               u.status,
+               u.household_id,
+               h.dong,
+               h.ho,
+               u.provider
         FROM user u
                  LEFT JOIN household h ON u.household_id = h.household_id
         WHERE u.user_id = #{userId}
@@ -40,8 +59,15 @@
 
     <!-- 소셜 제공자 + 제공자 ID로 사용자 조회 -->
     <select id="findByProviderAndProviderId" resultType="com.apt.user.model.User">
-        SELECT user_id, household_id, email, name, role, status,
-               provider, provider_id, created_at
+        SELECT user_id,
+               household_id,
+               email,
+               name,
+               role,
+               status,
+               provider,
+               provider_id,
+               created_at
         FROM user
         WHERE provider = #{provider}
           AND provider_id = #{providerId}
@@ -76,4 +102,18 @@
           AND is_deleted = 0
     </update>
 
+    <!-- 회원 탈퇴 시 이메일 null 처리 (재가입 허용을 위한 unique 제약 해제) -->
+    <update id="clearEmail">
+        UPDATE user
+        SET email = NULL
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 비밀번호 변경 -->
+    <update id="updatePassword">
+        UPDATE user
+        SET password = #{password},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
 </mapper>

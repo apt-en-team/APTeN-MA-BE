@@ -89,7 +89,9 @@
 
     <!-- 동 목록 전체 조회 (드롭다운용) -->
     <select id="findAllDongs" resultType="String">
-        SELECT DISTINCT dong FROM household ORDER BY dong
+        SELECT DISTINCT dong
+        FROM household
+        ORDER BY dong
     </select>
 
     <!--
@@ -98,11 +100,10 @@
         - 없으면 null 반환 → Service 에서 CustomException 던짐
     -->
     <select id="findById" resultType="com.apt.household.model.Household">
-        SELECT
-            household_id AS householdId,
-            dong,
-            ho,
-            created_at   AS createdAt
+        SELECT household_id AS householdId,
+               dong,
+               ho,
+               created_at   AS createdAt
         FROM household
         WHERE household_id = #{householdId}
     </select>
@@ -113,14 +114,13 @@
     - 없으면 null 반환 → 존재하지 않는 세대로 가입 불가 처리
 -->
     <select id="findByDongAndHo" resultType="com.apt.household.model.Household">
-        SELECT
-            household_id AS householdId,
-            dong,
-            ho,
-            created_at   AS createdAt
+        SELECT household_id AS householdId,
+               dong,
+               ho,
+               created_at   AS createdAt
         FROM household
         WHERE dong = #{dong}
-          AND ho   = #{ho}
+          AND ho = #{ho}
     </select>
 
     <!--
@@ -130,9 +130,9 @@
     -->
     <select id="existsByDongAndHo" resultType="int">
         SELECT COUNT(*)
-        FROM   household
-        WHERE  dong = #{dong}
-          AND  ho   = #{ho}
+        FROM household
+        WHERE dong = #{dong}
+          AND ho = #{ho}
     </select>
 
     <!--
@@ -143,9 +143,9 @@
     -->
     <select id="countUsersByHouseholdId" resultType="int">
         SELECT COUNT(*)
-        FROM   user
-        WHERE  household_id = #{householdId}
-          AND  is_deleted   = 0
+        FROM user
+        WHERE household_id = #{householdId}
+          AND is_deleted = 0
     </select>
 
     <!--
@@ -166,12 +166,10 @@
     -->
     <insert id="insertHistory" useGeneratedKeys="true" keyProperty="historyId">
         INSERT INTO household_history (household_id, user_id, status, changed_at)
-        VALUES (
-        #{householdId},
-        #{userId},
-        #{status},
-        NOW()
-        )
+        VALUES (#{householdId},
+                #{userId},
+                #{status},
+                NOW())
     </insert>
 
     <!-- 퇴거회원 householdId -> null 변경 -->
@@ -188,17 +186,16 @@
     -->
     <select id="findHistoryByHouseholdId"
             resultType="com.apt.household.dto.response.HouseholdHistoryRes">
-        SELECT
-            hh.history_id   AS historyId,
-            hh.household_id AS householdId,
-            hh.user_id      AS userId,
-            u.name          AS userName,
-            hh.status,
-            hh.changed_at   AS changedAt
-        FROM   household_history hh
-                   LEFT   JOIN user u ON hh.user_id = u.user_id
-        WHERE  hh.household_id = #{householdId}
-        ORDER  BY hh.changed_at DESC
+        SELECT hh.history_id   AS historyId,
+               hh.household_id AS householdId,
+               hh.user_id      AS userId,
+               u.name          AS userName,
+               hh.status,
+               hh.changed_at   AS changedAt
+        FROM household_history hh
+                 LEFT JOIN user u ON hh.user_id = u.user_id
+        WHERE hh.household_id = #{householdId}
+        ORDER BY hh.changed_at DESC
     </select>
 
     <!-- 세대 등록 입주민 조회 (APPROVED 상태 유저) -->
@@ -226,62 +223,64 @@
         감싸는 메인 SELECT 에서 집계
     -->
     <select id="getStats" resultType="com.apt.household.dto.response.HouseholdStatsRes">
-        SELECT
-            COUNT(*)                                                             AS total,
-            SUM(CASE WHEN sub.latest_status = '입주'  THEN 1 ELSE 0 END)        AS occupied,
-            SUM(CASE WHEN sub.latest_status IS NULL
-                OR sub.latest_status = '퇴거'  THEN 1 ELSE 0 END)        AS `empty`,
-            (
-                SELECT COUNT(DISTINCT household_id)
-                FROM   household_history
-                WHERE  status = '입주'
-                    AND  YEAR(changed_at)  = YEAR(NOW())
+        SELECT COUNT(*)                                                  AS total,
+               SUM(CASE WHEN sub.latest_status = '입주' THEN 1 ELSE 0 END) AS occupied,
+               SUM(CASE
+                       WHEN sub.latest_status IS NULL
+                           OR sub.latest_status = '퇴거' THEN 1
+                       ELSE 0 END)                                       AS `empty`,
+               (SELECT COUNT(DISTINCT household_id)
+                FROM household_history
+                WHERE status = '입주'
+                          AND YEAR (changed_at)  = YEAR(NOW())
                     AND  MONTH(changed_at) = MONTH(NOW())
             )                                                                    AS moveIn,
             (
-        SELECT COUNT(DISTINCT household_id)
-        FROM   household_history
-        WHERE  status = '퇴거'
-          AND  YEAR(changed_at)  = YEAR(NOW())
-          AND  MONTH(changed_at) = MONTH(NOW())
-            )                                                                    AS moveOut,
-        (
-        SELECT COUNT(*) FROM household h
+        SELECT COUNT (DISTINCT household_id)
+        FROM household_history
+        WHERE status = '퇴거'
+          AND YEAR (changed_at) = YEAR (NOW())
+          AND MONTH (changed_at) = MONTH (NOW())
+            ) AS moveOut
+            , (
+        SELECT COUNT (*)
+        FROM household h
         WHERE
         -- 현재 이 세대에 연결된 유저가 없고
-        NOT EXISTS (
-        SELECT 1 FROM user u
-        WHERE u.household_id = h.household_id
-        AND u.is_deleted = false
-        )
-        AND (
+            NOT EXISTS (
+            SELECT 1 FROM user u
+            WHERE u.household_id = h.household_id
+          AND u.is_deleted = false
+            )
+          AND (
         -- 케이스 1: 이력 자체 없고 등록일 한달 이상
-        (
-        NOT EXISTS (
-        SELECT 1 FROM household_history hh
-        WHERE hh.household_id = h.household_id
-        )
-        AND h.created_at &lt;= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-        )
-        OR
+            (
+            NOT EXISTS (
+            SELECT 1 FROM household_history hh
+            WHERE hh.household_id = h.household_id
+            )
+          AND h.created_at &lt;= DATE_SUB(NOW()
+            , INTERVAL 1 MONTH)
+            )
+           OR
         -- 케이스 2: 마지막 퇴거 이력이 한달 이상
-        (
-        SELECT hh.changed_at FROM household_history hh
-        WHERE hh.household_id = h.household_id
-        ORDER BY hh.changed_at DESC LIMIT 1
-        ) &lt;= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-        )
-        ) AS needCare
+            (
+            SELECT hh.changed_at FROM household_history hh
+            WHERE hh.household_id = h.household_id
+            ORDER BY hh.changed_at DESC LIMIT 1
+            ) &lt;= DATE_SUB(NOW()
+            , INTERVAL 1 MONTH)
+            )
+            ) AS needCare
         FROM (
             /* 각 세대의 가장 최신 이력 status 를 서브쿼리로 추출 */
             SELECT
-            h.household_id,
-            (
+            h.household_id, (
             SELECT hh.status
-            FROM   household_history hh
-            WHERE  hh.household_id = h.household_id
-            ORDER  BY hh.changed_at DESC
-            LIMIT  1
+            FROM household_history hh
+            WHERE hh.household_id = h.household_id
+            ORDER BY hh.changed_at DESC
+            LIMIT 1
             ) AS latest_status
             FROM household h
             ) sub

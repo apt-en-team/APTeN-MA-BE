@@ -24,6 +24,10 @@ repositories {
 }
 
 dependencies {
+
+    // 이메일 발송 (비밀번호 찾기)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'

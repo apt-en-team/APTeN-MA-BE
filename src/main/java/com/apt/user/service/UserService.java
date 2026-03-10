@@ -39,10 +39,16 @@ public class UserService {
 
     // 회원 탈퇴 (소프트 딜리트)
     // 1. is_deleted=1, deleted_at=NOW() 업데이트
-    // 2. RT DB 삭제 → 3. 쿠키 만료 → 자동 로그아웃
+    // 2. 이메일 null 처리 (재가입 허용을 위한 unique 제약 해제)
+    // 3. RT DB 삭제 → 4. 쿠키 만료 → 자동 로그아웃
     @Transactional
     public void deactivate(Long userId, HttpServletResponse res) {
         userMapper.softDeleteUser(userId);
+
+        // 탈퇴 시 이메일 null 처리 (동일 이메일 재가입 허용)
+        userMapper.clearEmail(userId);
+
+        // RT 삭제 후 쿠키 만료 처리
         authMapper.deleteRefreshTokenByUserId(userId);
         jwtTokenManager.expireCookies(res);
         log.info("회원 탈퇴 완료 - userId: {}", userId);

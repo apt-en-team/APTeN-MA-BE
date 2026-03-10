@@ -36,4 +36,10 @@ public interface UserMapper {
 
     // 사용자 정보 수정 (이름, 전화번호)
     int updateUser(@Param("userId") Long userId, @Param("req") UpdateUserReq req);
+
+    // 회원 탈퇴 시 이메일 null 처리 (재가입 허용을 위한 unique 제약 해제)
+    void clearEmail(Long userId);
+
+    // 비밀번호 변경
+    void updatePassword(Long userId, String password);
 }
