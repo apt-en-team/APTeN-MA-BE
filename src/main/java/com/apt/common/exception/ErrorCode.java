@@ -15,6 +15,9 @@ public enum ErrorCode {
     TOKEN_EXPIRED(401, "토큰이 만료되었습니다"),
     INVALID_TOKEN(401, "유효하지 않은 토큰입니다"),
 
+    // 메일 관련
+    MAIL_SEND_FAILED(500, "이메일 발송에 실패했습니다."),
+
     // ── 사용자 관련 ───────────────────────────────────────────────
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다"),
     DUPLICATE_EMAIL(400, "이미 사용중인 이메일입니다"),

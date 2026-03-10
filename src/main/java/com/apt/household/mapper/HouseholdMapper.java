@@ -20,7 +20,7 @@ public interface HouseholdMapper {
     // 세대 목록 조회 (페이징)
     // offset: 시작 위치, size: 가져올 개수
     List<HouseholdRes> findAll(HouseholdGetReq req);
-    int maxPage(HouseholdGetReq req);
+    PageRes getPageInfo(HouseholdGetReq req);
     List<String> findAllDongs();
 
     // 세대 단건 조회 (존재 여부 확인 및 수정/삭제 전 검증에 사용)

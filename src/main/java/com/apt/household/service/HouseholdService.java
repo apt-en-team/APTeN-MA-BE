@@ -30,8 +30,8 @@ public class HouseholdService {
     public List<HouseholdRes> getHouseholds(HouseholdGetReq req) {
         return householdMapper.findAll(req);
     }
-    public int getMaxPage(HouseholdGetReq req) {
-        return householdMapper.maxPage(req);
+    public PageRes getMaxPage(HouseholdGetReq req) {
+        return householdMapper.getPageInfo(req);
     }
     public List<String> getAllDongs() {
         return householdMapper.findAllDongs();

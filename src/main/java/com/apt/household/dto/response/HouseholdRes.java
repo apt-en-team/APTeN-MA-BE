@@ -20,9 +20,6 @@ public class HouseholdRes {
     // 호수 (예: 502호)
     private String ho;
 
-    // 세대 등록 일시
-    private String createdAt;
-
     // 현재 입주 상태: '입주' / '퇴거' / '공실'
     // household_history 테이블에서 가장 최근 이력의 status 값
     // 이력이 없으면 '공실'로 표시 (MyBatis XML에서 COALESCE 처리)
@@ -33,5 +30,8 @@ public class HouseholdRes {
 
     //승인 요층 세대 수
     private int pendingCount;
+
+    // 세대 등록일 or 마지막 이력일 중 최신
+    private String lastChangedAt;
 
 }
