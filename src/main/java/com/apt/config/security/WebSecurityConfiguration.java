@@ -54,6 +54,9 @@ public class WebSecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/check-email").permitAll()
+                        // 비밀번호 재설정 (인증 없이 접근 가능)
+                        .requestMatchers(HttpMethod.POST, "/api/mail/password-reset").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/mail/reset-password").permitAll()
 
                         // 소셜 로그인 콜백 (OAuth2)
                         .requestMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
