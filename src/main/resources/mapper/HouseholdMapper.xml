@@ -22,7 +22,6 @@
         SELECT
         h.household_id AS householdId,
         h.dong, h.ho,
-        h.created_at AS createdAt,
         COALESCE((
         SELECT hh.status FROM household_history hh
         WHERE hh.household_id = h.household_id
@@ -35,7 +34,15 @@
         WHERE u.household_id = h.household_id
         AND u.status = 'PENDING'
         AND u.is_deleted = false
-        ) AS pendingCount
+        ) AS pendingCount,
+        GREATEST(
+        h.created_at,
+        COALESCE((
+        SELECT hh.changed_at FROM household_history hh
+        WHERE hh.household_id = h.household_id
+        ORDER BY hh.changed_at DESC LIMIT 1
+        ), h.created_at)
+        ) AS lastChangedAt
         FROM household h
         <where>
             <if test="dong != null and dong != ''">
@@ -64,19 +71,18 @@
           AND is_deleted = false
     </select>
 
-    <select id="maxPage" resultType="int">
-        SELECT CEIL(COUNT(1) / #{size})
+    <select id="getPageInfo" resultType="com.apt.household.dto.response.PageRes">
+        SELECT
+        COUNT(1)                    AS totalCount,
+        CEIL(COUNT(1) / #{size})    AS maxPage
         FROM household h
         <where>
-            <if test="dong != null and dong != ''">
-                h.dong = #{dong}
-            </if>
+            <if test="dong != null and dong != ''">h.dong = #{dong}</if>
+            <if test="ho != null and ho != ''">AND h.ho LIKE CONCAT('%', #{ho}, '%')</if>
             <if test="status != null and status != ''">
-                AND COALESCE((
-                SELECT hh.status FROM household_history hh
+                AND COALESCE((SELECT hh.status FROM household_history hh
                 WHERE hh.household_id = h.household_id
-                ORDER BY hh.changed_at DESC LIMIT 1
-                ), '공실') = #{status}
+                ORDER BY hh.changed_at DESC LIMIT 1), '공실') = #{status}
             </if>
         </where>
     </select>
