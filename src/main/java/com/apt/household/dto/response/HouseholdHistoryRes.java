@@ -26,5 +26,5 @@ public class HouseholdHistoryRes {
     private String status;
 
     // 이력 등록 일시
-    private LocalDateTime changedAt;
+    private String changedAt;
 }

@@ -19,5 +19,5 @@ public class Household {
     private String ho;
 
     // 세대 등록 일시
-    private LocalDateTime createdAt;
+    private String createdAt;
 }

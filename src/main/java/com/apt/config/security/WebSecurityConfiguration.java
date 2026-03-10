@@ -94,7 +94,7 @@ public class WebSecurityConfiguration {
         CorsConfiguration config = new CorsConfiguration();
 
         // 허용할 출처 (Vue 개발 서버)
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:3000"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:5177","http://localhost:5176","http://localhost:3000"));
 
         // 허용할 HTTP 메서드 - PATCH 추가
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

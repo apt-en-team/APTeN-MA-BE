@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.user.mapper.AdminUserMapper">
+
+    <!-- 유저 단건 조회 -->
+    <select id="findById" resultType="com.apt.user.dto.response.AdminUserRes">
+        SELECT
+            user_id      AS userId,
+            name,
+            phone,
+            household_id AS householdId,
+            status
+        FROM user
+        WHERE user_id = #{userId}
+          AND is_deleted = false
+    </select>
+
+    <!-- 유저 상태 변경 (APPROVED / REJECTED) -->
+    <update id="updateStatus">
+        UPDATE user
+        SET
+            status     = #{status},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 세대 입주 이력 등록 -->
+    <!-- household_history: household_id, user_id, status='입주', changed_at=NOW() -->
+    <insert id="insertHistory">
+        INSERT INTO household_history (household_id, user_id, status, changed_at)
+        VALUES (#{householdId}, #{userId}, '입주', NOW())
+    </insert>
+
+</mapper>
