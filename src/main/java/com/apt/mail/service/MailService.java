@@ -104,14 +104,52 @@ public class MailService {
     // 이메일 HTML 내용 생성
     private String buildEmailContent(String resetToken) {
         String resetUrl = "http://localhost:5173/reset-password?token=" + resetToken;
-        return "<div style='font-family: sans-serif; max-width: 600px; margin: 0 auto;'>"
-                + "<h2 style='color: #1E2533;'>비밀번호 재설정</h2>"
-                + "<p>아래 버튼을 클릭하여 비밀번호를 재설정하세요.</p>"
-                + "<p>링크는 <strong>30분</strong> 후 만료됩니다.</p>"
+        return "<!DOCTYPE html>"
+                + "<html><head><meta charset='UTF-8'></head><body>"
+                + "<div style='background:#f5f6fa; padding: 40px 0; font-family: \"Noto Sans KR\", sans-serif;'>"
+
+                // 카드
+                + "<div style='max-width:600px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);'>"
+
+                // 헤더
+                + "<div style='background:#1E2A3E; padding:28px 40px; text-align:center;'>"
+                + "<span style='font-size:22px; font-weight:700; color:#fff; letter-spacing:-0.5px;'>아파트엔</span>"
+                + "<span style='font-size:12px; color:#7B8EA8; margin-left:8px;'>APTeN</span>"
+                + "</div>"
+
+                // 본문
+                + "<div style='padding:40px;'>"
+                + "<p style='font-size:13px; color:#A0AEC0; margin:0 0 8px;'>" + java.time.LocalDate.now() + "</p>"
+                + "<h2 style='font-size:20px; font-weight:700; color:#1A202C; margin:0 0 16px;'>"
+                + "<strong>비밀번호 재설정</strong> 안내"
+                + "</h2>"
+                + "<p style='font-size:14px; color:#4A5568; line-height:1.7; margin:0 0 24px;'>"
+                + "아래 버튼을 클릭하여 비밀번호를 재설정하세요.<br>"
+                + "링크는 <strong>30분</strong> 후 만료됩니다."
+                + "</p>"
+
+                // 버튼
+                + "<div style='text-align:center; margin: 32px 0;'>"
                 + "<a href='" + resetUrl + "' "
-                + "style='display: inline-block; padding: 12px 24px; "
-                + "background: #1E2533; color: #fff; text-decoration: none; "
-                + "border-radius: 8px; margin-top: 16px;'>비밀번호 재설정</a>"
-                + "</div>";
+                + "style='display:inline-block; padding:14px 32px; background:#1E2A3E; color:#fff; "
+                + "text-decoration:none; border-radius:8px; font-size:15px; font-weight:600;'>"
+                + "비밀번호 재설정하기"
+                + "</a>"
+                + "</div>"
+
+                + "<p style='font-size:12px; color:#A0AEC0; margin:24px 0 0; line-height:1.6;'>"
+                + "본인이 요청하지 않은 경우 이 메일을 무시하세요.<br>"
+                + "링크는 30분 후 자동으로 만료됩니다."
+                + "</p>"
+                + "</div>"
+
+                // 푸터
+                + "<div style='background:#f5f6fa; padding:20px 40px; text-align:center; border-top:1px solid #E2E8F0;'>"
+                + "<p style='font-size:12px; color:#A0AEC0; margin:0;'>© 2026 APTeN 아파트엔. All rights reserved.</p>"
+                + "</div>"
+
+                + "</div>"
+                + "</div>"
+                + "</body></html>";
     }
 }
