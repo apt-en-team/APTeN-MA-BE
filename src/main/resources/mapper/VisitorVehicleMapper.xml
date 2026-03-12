@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.apt.visitorvehicle.mapper.VisitorVehicleMapper">
+    <!-- 방문차량 등록: status는 자동 승인(APPROVED) 고정 -->
+    <insert id="insertVisitorVehicle" useGeneratedKeys="true" keyProperty="visitorVehicleId">
+        INSERT INTO visitor_vehicle (user_id, license_plate, visitor_name, visit_purpose, visit_date, status,
+                                     created_at)
+        VALUES (#{userId}, #{licensePlate}, #{visitorName}, #{visitPurpose}, #{visitDate}, 'APPROVED', NOW())
+    </insert>
+</mapper>
