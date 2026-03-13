@@ -4,6 +4,13 @@
 
 <mapper namespace="com.apt.reservation.mapper.ReservationMapper">
 
+    <!-- 상태 업데이트  -->
+    <update id="updateStatusToCompleted">
+        UPDATE reservation
+        SET status = 'COMPLETED'
+        WHERE status = 'CONFIRMED'
+        AND reservation_date &lt; #{today}
+    </update>
     <!-- 예약 가능 시간대 조회 -->
     <select id="findAvailableTime"
             parameterType="com.apt.reservation.dto.request.ReservationReq"
@@ -57,19 +64,46 @@
     <select id="findReservationById"
             resultType="com.apt.reservation.dto.response.ReservationRes">
         SELECT
-            r.reservation_id   AS reservationId,
-            r.user_id          AS userId,
-            r.facility_id      AS facilityId,
+            r.reservation_id,
+            r.user_id,
+            r.facility_id,
             f.name             AS facilityName,
-            r.reservation_date AS reservationDate,
-            r.start_time       AS startTime,
-            r.end_time         AS endTime,
-            r.seat_no          AS seatNo,
+            r.reservation_date,
+            r.start_time,
+            r.end_time,
+            r.seat_no,
             r.status,
-            r.created_at       AS createdAt
+            r.created_at
         FROM reservation r
                  JOIN facility f ON f.facility_id = r.facility_id
         WHERE r.reservation_id = #{reservationId}
+    </select>
+
+    <!-- 내 예약 전체 조회 -->
+    <select id="findAll" resultType="com.apt.reservation.dto.response.ReservationRes">
+        SELECT r.reservation_id,
+               r.user_id,
+               f.name as facilityName,
+               r.reservation_date,
+               r.start_time,
+               r.end_time,
+               r.seat_no,
+               r.status
+
+        FROM reservation r
+        left join facility f
+        ON r.facility_id = f.facility_id
+        WHERE r.user_id = #{userId}
+        <if test="status == 'CONFIRMED'">
+            AND r.status IN ('CONFIRMED', 'PENDING')
+        </if>
+        <if test="status == 'COMPLETED'">
+            AND r.status IN ('COMPLETED', 'CANCELLED')
+        </if>
+        <if test="facilityName != null and facilityName != ''">
+            AND f.name LIKE CONCAT('%', #{facilityName}, '%')
+        </if>
+        ORDER BY r.reservation_date DESC, r.start_time DESC
     </select>
 
 

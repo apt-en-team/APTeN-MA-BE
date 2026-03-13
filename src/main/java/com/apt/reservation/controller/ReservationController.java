@@ -2,6 +2,7 @@ package com.apt.reservation.controller;
 
 import com.apt.common.response.ResultResponse;
 import com.apt.common.security.UserPrincipal;
+import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,15 @@ public class ReservationController {
         req.setUserId( userPrincipal.getUserId());
         System.out.println("facilityId = " + req.getFacilityId());
         return ResultResponse.success("등록 성공", reservationService.createReservation(req));
+    }
+
+    //내 예약 목록 (API-055 / UI-038) 상태기준 이용내역 or 지난내역
+    @GetMapping("/my")
+    public ResultResponse<?> getReservation(ReservationGetReq req
+                          , @AuthenticationPrincipal UserPrincipal userPrincipal){
+        req.setUserId(userPrincipal.getUserId());
+        System.out.println("userId = " + req.getUserId());
+        return ResultResponse.success("조회 성공", reservationService.findReservation(req));
     }
 
 }

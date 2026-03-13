@@ -4,11 +4,13 @@ import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
 import com.apt.facility.mapper.FacilityMapper;
 import com.apt.facility.model.Facility;
+import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.dto.response.AvailableSlotRes;
 import com.apt.reservation.dto.response.ReservationRes;
 import com.apt.reservation.mapper.ReservationMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,16 @@ public class ReservationService {
             throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
         }
         return facility;
+    }
+
+    //매일 자정 확인된 예약 완료로 변경
+    // 0 0 0 * * * 는 매일 00:00:00을 의미
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void updateReservationStatusToCompleted() {
+        // 오늘 날짜 이전(어제까지)이면서 상태가 'CONFIRMED'인 예약을 찾아서 'COMPLETED'로 변경
+        int updatedCount = reservationMapper.updateStatusToCompleted(LocalDate.now());
+        System.out.println(LocalDate.now() + " 기준 " + updatedCount + "건의 예약이 'COMPLETED' 처리되었습니다.");
     }
 
     //예약 가능 시간대 조회
@@ -95,5 +107,10 @@ public class ReservationService {
         reservationMapper.insertReservation(req);
         System.out.println("facilityId = " + req.getFacilityId());
         return reservationMapper.findReservationById(req.getReservationId());
+    }
+
+    //내 예약 목록 조회
+    public List<ReservationRes> findReservation(ReservationGetReq req){
+        return reservationMapper.findAll(req);
     }
 }
