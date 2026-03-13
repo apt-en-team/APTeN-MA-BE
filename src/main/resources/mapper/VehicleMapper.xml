@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.vehicle.mapper.VehicleMapper">
+
+    <!-- 내 차량 목록 조회 -->
+    <select id="findByUserId" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT vehicle_id, user_id, household_id, license_plate, car_model,
+               status, approved_by, approved_at, created_at
+        FROM vehicle
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 차량 단건 조회 -->
+    <select id="findById" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT vehicle_id, user_id, household_id, license_plate, car_model,
+               status, approved_by, approved_at, created_at
+        FROM vehicle
+        WHERE vehicle_id = #{vehicleId}
+    </select>
+
+    <!-- 전체 차량 목록 조회 (관리자) -->
+    <select id="findAll" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT vehicle_id, user_id, household_id, license_plate, car_model,
+               status, approved_by, approved_at, created_at
+        FROM vehicle
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 세대 차량 수 조회 (2대 제한) -->
+    <select id="countByHouseholdId" resultType="int">
+        SELECT COUNT(*)
+        FROM vehicle
+        WHERE household_id = #{householdId}
+          AND status != 'REJECTED'
+    </select>
+
+    <!-- 번호판 중복 체크 -->
+    <select id="existsByLicensePlate" resultType="int">
+        SELECT COUNT(*)
+        FROM vehicle
+        WHERE license_plate = #{licensePlate}
+    </select>
+
+    <!-- 번호판으로 vehicle_id 조회 -->
+    <select id="findIdByLicensePlate" resultType="Long">
+        SELECT vehicle_id
+        FROM vehicle
+        WHERE license_plate = #{licensePlate}
+          AND status = 'APPROVED'
+            LIMIT 1
+    </select>
+
+    <!-- 차량 등록 -->
+    <insert id="insertVehicle" useGeneratedKeys="true" keyProperty="vehicleId">
+        INSERT INTO vehicle (user_id, household_id, license_plate, car_model, status, created_at)
+        VALUES (#{userId}, #{householdId}, #{licensePlate}, #{carModel}, 'PENDING', NOW())
+    </insert>
+
+    <!-- 차량 수정 -->
+    <update id="updateVehicle">
+        UPDATE vehicle
+        SET license_plate = #{licensePlate},
+            car_model     = #{carModel}
+        WHERE vehicle_id = #{vehicleId}
+    </update>
+
+    <!-- 차량 삭제 -->
+    <delete id="deleteVehicle">
+        DELETE FROM vehicle
+        WHERE vehicle_id = #{vehicleId}
+    </delete>
+
+    <!-- 승인 처리 -->
+    <update id="approveVehicle">
+        UPDATE vehicle
+        SET status      = 'APPROVED',
+            approved_by = #{approvedBy},
+            approved_at = NOW()
+        WHERE vehicle_id = #{vehicleId}
+    </update>
+
+    <!-- 거부 처리 -->
+    <update id="rejectVehicle">
+        UPDATE vehicle
+        SET status = 'REJECTED'
+        WHERE vehicle_id = #{vehicleId}
+    </update>
+
+    <!-- 상태별 차량 수 조회 (통계용) -->
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM vehicle
+        WHERE status = #{status}
+    </select>
+
+</mapper>
