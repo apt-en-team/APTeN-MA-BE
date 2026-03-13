@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.reservation.mapper.ReservationMapper">
+
+    <select id="findAvailableTime"
+            parameterType="com.apt.reservation.dto.request.ReservationReq"
+            resultType="com.apt.reservation.dto.response.AvailableSlotRes">
+        SELECT
+            start_time  AS startTime,
+            COUNT(*)    AS reservedCount
+        FROM reservation
+        WHERE facility_id      = #{facilityId}
+          AND reservation_date = #{reservationDate}
+      AND status           = 'CONFIRMED'
+        GROUP BY start_time
+        ORDER BY start_time
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.facility.mapper.FacilityMapper">
+
+    <!-- 공통 컬럼 재사용 -->
+    <sql id="facilityColumns">
+        facility_id   AS facilityId,
+        type_id       AS typeId,
+        name,
+        description,
+        max_capacity  AS maxCapacity,
+        open_time     AS openTime,
+        close_time    AS closeTime,
+        slot_duration AS slotDuration,
+        is_active     AS isActive,
+        created_at    AS createdAt
+    </sql>
+
+    <!-- 시설 단건 조회 -->
+    <!-- 사용처: 예약 생성 시 시설 존재 확인 / 예약 가능 시간대 조회 시 운영시간·정원 조회 -->
+    <select id="findById"
+            parameterType="long"
+            resultType="com.apt.facility.model.Facility">
+        SELECT
+        <include refid="facilityColumns"/>
+        FROM facility
+        WHERE facility_id = #{facilityId}
+    </select>
+
+    <!-- 운영 중인 시설 전체 조회 -->
+    <!-- 사용처: 예약 화면 시설 드롭다운 -->
+    <select id="findAllActive"
+            resultType="com.apt.facility.model.Facility">
+        SELECT
+        <include refid="facilityColumns"/>
+        FROM facility
+        WHERE is_active = 1
+        ORDER BY type_id, facility_id
+    </select>
+
+</mapper>
