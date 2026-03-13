@@ -38,6 +38,7 @@ public enum ErrorCode {
     VISITOR_VEHICLE_NOT_FOUND(404, "방문차량을 찾을 수 없습니다"),
     // 방문 예정일로 과거 날짜 선택 불가
     PAST_VISIT_DATE(400, "과거 날짜는 선택할 수 없습니다"),
+    VISITOR_VEHICLE_NOT_APPROVED(400, "승인된 차량만 등록 취소할 수 있습니다"),
 
     // ── 차량 관련 ─────────────────────────────────────────────────
     VEHICLE_NOT_FOUND(404, "차량을 찾을 수 없습니다"),

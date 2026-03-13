@@ -39,4 +39,60 @@
         FROM visitor_vehicle
         <include refid="myVehicleFilter"/>
     </select>
+
+    <!-- 방문차량 상세 조회 -->
+    <select id="findById" resultType="com.apt.visitorvehicle.model.VisitorVehicle">
+        SELECT visitor_vehicle_id,
+               user_id,
+               license_plate,
+               visitor_name,
+               visit_date,
+               visit_purpose,
+               status,
+               created_at
+        FROM visitor_vehicle
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </select>
+
+    <!-- API-034 | 방문차량 수정 -->
+    <update id="updateVisitorVehicle" parameterType="com.apt.visitorvehicle.model.VisitorVehicle">
+        UPDATE visitor_vehicle
+        SET license_plate = #{licensePlate},
+            visitor_name  = #{visitorName},
+            visit_purpose = #{visitPurpose},
+            visit_date    = #{visitDate},
+            status        = #{status}
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </update>
+
+    <!-- API-035 | 방문차량 삭제 -->
+    <delete id="deleteVisitorVehicle" parameterType="Long">
+        DELETE FROM visitor_vehicle
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </delete>
+
+    <!-- 사이드 카드용 | 오늘 방문 차량 수 -->
+    <select id="countTodayByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+          AND visit_date = CURDATE()
+          AND status = 'APPROVED'
+    </select>
+
+    <!-- 사이드 카드용 | 예비 방문 차량 수 (오늘 이후) -->
+    <select id="countUpcomingByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+          AND visit_date > CURDATE()
+          AND status = 'APPROVED'
+    </select>
+
+    <!-- 사이드 카드용 | 전체 등록 건수 -->
+    <select id="countAllByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

@@ -8,10 +8,31 @@ import java.util.List;
 
 @Mapper
 public interface VisitorVehicleMapper {
-    // 방문차량 등록
+
+    // API-030 | 방문차량 등록
     void insertVisitorVehicle(VisitorVehicle visitorVehicle);
-    // 내 방문차량 목록 조회 (필터 + 페이징)
+
+    // API-031 | 내 방문차량 목록 조회 (필터 + 페이징)
     List<VisitorVehicle> findByUserIdWithFilter(@Param("userId") Long userId, @Param("req") VisitorVehicleGetReq req);
-    // 내 방문차량 총 개수 (페이징 계산용)
+
+    // API-031 | 내 방문차량 총 개수 (페이징 계산용)
     int countByUserIdWithFilter(@Param("userId") Long userId, @Param("req") VisitorVehicleGetReq req);
+
+    // API-032 | 방문차량 상세 조회 (PK로 조회)
+    VisitorVehicle findById(Long visitorVehicleId);
+
+    // API-034 | 방문차량 수정 (cancel 상태 변경도 공용)
+    void updateVisitorVehicle(VisitorVehicle visitorVehicle);
+
+    // API-035 | 방문차량 삭제
+    void deleteVisitorVehicle(Long visitorVehicleId);
+
+    // 사이드 카드용 | 오늘 방문 차량 수 (visit_date = 오늘, APPROVED만)
+    int countTodayByUserId(Long userId);
+
+    // 사이드 카드용 | 예비 방문 차량 수 (visit_date > 오늘, APPROVED만)
+    int countUpcomingByUserId(Long userId);
+
+    // 전체 등록 건수 (필터 무관)
+    int countAllByUserId(Long userId);
 }
