@@ -13,7 +13,7 @@ public class PasswordResetToken {
     // 토큰 ID (PK)
     private long tokenId;
 
-    // 사용자 ID (FK)
+    // 사용자 ID
     private Long userId;
 
     // 재설정 토큰 값 (UUID)
