@@ -1,15 +1,13 @@
 package com.apt.reservation.controller;
 
 import com.apt.common.response.ResultResponse;
+import com.apt.common.security.UserPrincipal;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -17,9 +15,19 @@ import java.time.LocalDate;
 public class ReservationController {
     private final ReservationService reservationService;
 
+    //예약 가능 시간대 조회 (API-053 / UI-036)
     @GetMapping("/available")
     public ResultResponse<?> findAvailableTime(@ModelAttribute ReservationReq req){
-        return ResultResponse.success("성공", reservationService.findAvailableTime(req));
+        return ResultResponse.success("조회 성공", reservationService.findAvailableTime(req));
+    }
+
+    //예약 생성 (API-054 / UI-037)
+    @PostMapping
+    public ResultResponse<?> createReservation(@RequestBody ReservationReq req
+                             , @AuthenticationPrincipal UserPrincipal userPrincipal){
+        req.setUserId( userPrincipal.getUserId());
+        System.out.println("facilityId = " + req.getFacilityId());
+        return ResultResponse.success("등록 성공", reservationService.createReservation(req));
     }
 
 }

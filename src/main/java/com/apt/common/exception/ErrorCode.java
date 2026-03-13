@@ -56,6 +56,7 @@ public enum ErrorCode {
     // ── 예약 관련 ─────────────────────────────────────────────────
     // 동일 시설+날짜+시간+좌석 중복 예약 방지 (NFR-007)
     DUPLICATE_RESERVATION(409, "이미 예약된 시간입니다"),
+    INVALID_DATE(409, "예약할 수 없는 날짜입니다"),
     // 헬스장/GX: max_capacity 초과 방지 (FR-044)
     RESERVATION_FULL(400, "정원이 초과되었습니다"),
     RESERVATION_NOT_FOUND(404, "예약을 찾을 수 없습니다"),

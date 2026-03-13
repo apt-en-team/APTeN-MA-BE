@@ -44,4 +44,6 @@ public class Facility {
     /** 등록 일시 */
     private LocalDateTime createdAt;
 
+    private int price;
+
 }

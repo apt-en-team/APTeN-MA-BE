@@ -21,4 +21,9 @@ public class ReservationReq {
     private LocalTime endTime;         // 종료 시간 (11:00)
     private Integer seatNo;            // 좌석 번호 (독서실·스크린룸만, 나머지 null)
 
+    private Long userId;
+
+    private Long programId;
+    private long reservationId;
+    private String status;
 }

@@ -4,6 +4,7 @@
 
 <mapper namespace="com.apt.reservation.mapper.ReservationMapper">
 
+    <!-- 예약 가능 시간대 조회 -->
     <select id="findAvailableTime"
             parameterType="com.apt.reservation.dto.request.ReservationReq"
             resultType="com.apt.reservation.dto.response.AvailableSlotRes">
@@ -16,6 +17,59 @@
       AND status           = 'CONFIRMED'
         GROUP BY start_time
         ORDER BY start_time
+    </select>
+
+    <!-- 좌석 중복 체크 -->
+    <select id="countSeatReserved">
+        SELECT COUNT(*) FROM reservation
+        WHERE facility_id = #{facilityId}
+          AND reservation_date = #{reservationDate}
+          AND start_time = #{startTime}
+          AND seat_no = #{seatNo}
+          AND status = 'CONFIRMED'
+        FOR UPDATE
+    </select>
+    <!-- 정원 초과 체크 -->
+    <select id="countReserved">
+        SELECT COUNT(*) FROM reservation
+        WHERE facility_id = #{facilityId}
+          AND reservation_date = #{reservationDate}
+          AND start_time = #{startTime}
+          AND status = 'CONFIRMED'
+    </select>
+    <!-- 예약 생성 -->
+    <insert id="insertReservation"
+            parameterType="com.apt.reservation.dto.request.ReservationReq"
+            useGeneratedKeys="true"
+            keyProperty="reservationId">
+        INSERT INTO reservation
+            SET user_id = #{userId}
+            , facility_id = #{facilityId}
+            , reservation_date = #{reservationDate}
+            ,start_time = #{startTime}
+            , end_time = #{endTime}
+            , seat_no =  #{seatNo}
+            , program_id = #{programId}
+            , status = #{status}
+    </insert>
+
+    <!-- 예약 단건 조회 - facility JOIN으로 facilityName 가져오기 -->
+    <select id="findReservationById"
+            resultType="com.apt.reservation.dto.response.ReservationRes">
+        SELECT
+            r.reservation_id   AS reservationId,
+            r.user_id          AS userId,
+            r.facility_id      AS facilityId,
+            f.name             AS facilityName,
+            r.reservation_date AS reservationDate,
+            r.start_time       AS startTime,
+            r.end_time         AS endTime,
+            r.seat_no          AS seatNo,
+            r.status,
+            r.created_at       AS createdAt
+        FROM reservation r
+                 JOIN facility f ON f.facility_id = r.facility_id
+        WHERE r.reservation_id = #{reservationId}
     </select>
 
 
