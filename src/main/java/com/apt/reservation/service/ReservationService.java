@@ -42,8 +42,8 @@ public class ReservationService {
     @Transactional
     public void updateReservationStatusToCompleted() {
         // 오늘 날짜 이전(어제까지)이면서 상태가 'CONFIRMED'인 예약을 찾아서 'COMPLETED'로 변경
+        // 오늘 날짜 이전(어제까지)이면서 상태가 'PENDING'인 예약을 찾아서 'CANCELLED'로 변경
         int updatedCount = reservationMapper.updateStatusToCompleted(LocalDate.now());
-        System.out.println(LocalDate.now() + " 기준 " + updatedCount + "건의 예약이 'COMPLETED' 처리되었습니다.");
     }
 
     //예약 가능 시간대 조회
@@ -113,4 +113,16 @@ public class ReservationService {
     public List<ReservationRes> findReservation(ReservationGetReq req){
         return reservationMapper.findAll(req);
     }
+
+    //예약 상세 조회
+    public ReservationRes getReservationDetail(long id, long userId){
+
+        ReservationRes reservation = reservationMapper.findReservationById(id);
+        //본인 예약 맞는지 확인
+        if(!reservation.getUserId().equals(userId)){
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+        return reservation;
+    };
+
 }

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class ReservationGetReq {
     private long userId;
     private String facilityName; // 시설 이름 필터
-    private LocalDate status;       // 상태 필터
+    private String status;       // 상태 필터
     private int page    = 1;
     private int size    = 10;
     private int startIdx;         // MyBatis용 (page-1)*size

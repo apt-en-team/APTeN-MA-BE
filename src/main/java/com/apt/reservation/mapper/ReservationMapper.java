@@ -19,13 +19,11 @@ public interface ReservationMapper {
     //예약 가능 시간대 조회
     List<AvailableSlotRes> findAvailableTime(ReservationReq req);
 
-    //좌석 중복 체크
-    int countSeatReserved(ReservationReq req);
-    //정원 초과 체크
-    int countReserved(ReservationReq req);
     //예약 생성
-    void insertReservation(ReservationReq req);
-    ReservationRes findReservationById(Long reservationId);
+    int countSeatReserved(ReservationReq req); //좌석 중복 체크
+    int countReserved(ReservationReq req); //정원 초과 체크
+    void insertReservation(ReservationReq req);//insert
+    ReservationRes findReservationById(Long reservationId);//확인값 반환
 
     //내 예약목록 조회
     List<ReservationRes> findAll(ReservationGetReq req);

@@ -7,8 +7,11 @@
     <!-- 상태 업데이트  -->
     <update id="updateStatusToCompleted">
         UPDATE reservation
-        SET status = 'COMPLETED'
-        WHERE status = 'CONFIRMED'
+        SET status = CASE
+             WHEN status = 'CONFIRMED' THEN 'COMPLETED'
+             WHEN status = 'PENDING'   THEN 'CANCELLED'
+        END
+        WHERE status IN ('CONFIRMED', 'PENDING')
         AND reservation_date &lt; #{today}
     </update>
     <!-- 예약 가능 시간대 조회 -->
@@ -19,9 +22,9 @@
             start_time  AS startTime,
             COUNT(*)    AS reservedCount
         FROM reservation
-        WHERE facility_id      = #{facilityId}
+        WHERE facility_id = #{facilityId}
           AND reservation_date = #{reservationDate}
-      AND status           = 'CONFIRMED'
+          AND status = 'CONFIRMED'
         GROUP BY start_time
         ORDER BY start_time
     </select>
@@ -67,7 +70,7 @@
             r.reservation_id,
             r.user_id,
             r.facility_id,
-            f.name             AS facilityName,
+            f.name AS facilityName,
             r.reservation_date,
             r.start_time,
             r.end_time,
@@ -79,7 +82,7 @@
         WHERE r.reservation_id = #{reservationId}
     </select>
 
-    <!-- 내 예약 전체 조회 -->
+    <!-- 내 예약 조회 - 이용예정/지난내역/시설이름 필터 -->
     <select id="findAll" resultType="com.apt.reservation.dto.response.ReservationRes">
         SELECT r.reservation_id,
                r.user_id,
@@ -94,16 +97,17 @@
         left join facility f
         ON r.facility_id = f.facility_id
         WHERE r.user_id = #{userId}
-        <if test="status == 'CONFIRMED'">
+        <if test='status == "CONFIRMED"'>
             AND r.status IN ('CONFIRMED', 'PENDING')
         </if>
-        <if test="status == 'COMPLETED'">
+        <if test='status == "COMPLETED"'>
             AND r.status IN ('COMPLETED', 'CANCELLED')
         </if>
         <if test="facilityName != null and facilityName != ''">
             AND f.name LIKE CONCAT('%', #{facilityName}, '%')
         </if>
         ORDER BY r.reservation_date DESC, r.start_time DESC
+        LIMIT #{startIdx}, #{size}
     </select>
 
 

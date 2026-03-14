@@ -31,7 +31,7 @@ public class ReservationController {
         return ResultResponse.success("등록 성공", reservationService.createReservation(req));
     }
 
-    //내 예약 목록 (API-055 / UI-038) 상태기준 이용내역 or 지난내역
+    //내 예약 목록 (API-055 / UI-038) 상태기준 이용내역 or or'≥≥≥≥≥≥≥≥≥≥≥지난내역
     @GetMapping("/my")
     public ResultResponse<?> getReservation(ReservationGetReq req
                           , @AuthenticationPrincipal UserPrincipal userPrincipal){
@@ -39,5 +39,13 @@ public class ReservationController {
         System.out.println("userId = " + req.getUserId());
         return ResultResponse.success("조회 성공", reservationService.findReservation(req));
     }
+
+    //예약 상세 조회 (API-056 / UI-039)
+    @GetMapping("/{id}")
+    public ResultResponse<?> getDetail(@PathVariable long id
+                          , @AuthenticationPrincipal UserPrincipal userPrincipal){
+        return ResultResponse.success("조회 성공", reservationService.getReservationDetail(id,userPrincipal.getUserId()));
+    }
+
 
 }
