@@ -21,23 +21,24 @@ public class VisitorVehicleController {
     private final VisitorVehicleService visitorVehicleService;
 
     // API-030 | 방문차량 사전등록
-    @PostMapping
+    @PostMapping  // POST /api/visitor-vehicles 요청이 오면 이 메서드가 실행됨
     public ResponseEntity<VisitorVehicleRes> registerVisitorVehicle(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @Valid @RequestBody VisitorVehicleReq req) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal, // JWT 쿠키에서 로그인한 유저 정보 자동 추출
+            @Valid @RequestBody VisitorVehicleReq req) {  // Body의 JSON을 VisitorVehicleReq 객체로 자동 변환
         VisitorVehicleRes res = visitorVehicleService.registerVisitorVehicle(
-                userPrincipal.getUserId(), req);
-        return ResponseEntity.ok(res);
+                userPrincipal.getUserId(), req); // Service로 넘김
+        return ResponseEntity.ok(res); // 200 OK + 결과 JSON 응답
     }
 
     // API-031 | 내 방문차량 목록 조회
+    // GET /api/visitor-vehicles/my?page=1&size=10&licensePlate=12가 요청이 오면 실행
     @GetMapping("/my")
     public ResponseEntity<Map<String, Object>> getMyVisitorVehicles(
-            @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @ModelAttribute VisitorVehicleGetReq req) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal,  // JWT 쿠키에서 로그인 유저 추출
+            @ModelAttribute VisitorVehicleGetReq req) { // URL 쿼리스트링을 자바 객체로 변환
         Map<String, Object> result = visitorVehicleService.getMyVisitorVehicles(
-                userPrincipal.getUserId(), req);
-        return ResponseEntity.ok(result);
+                userPrincipal.getUserId(), req);  // Service에 userId와 필터+페이징 조건 넘김
+        return ResponseEntity.ok(result);  // 200 OK + JSON 응답
     }
 
     // API-032 | 방문차량 상세 조회

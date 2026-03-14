@@ -12,6 +12,7 @@
     <!-- 공통 WHERE 조건 (목록 + 카운트에서 재사용) -->
     <sql id="myVehicleFilter">
         WHERE user_id = #{userId}
+        AND is_deleted = 0
         <if test="req.licensePlate != null and req.licensePlate != ''">
             AND license_plate LIKE CONCAT('%', #{req.licensePlate}, '%')
         </if>
@@ -52,8 +53,8 @@
                created_at
         FROM visitor_vehicle
         WHERE visitor_vehicle_id = #{visitorVehicleId}
+          AND is_deleted = 0
     </select>
-
     <!-- API-034 | 방문차량 수정 -->
     <update id="updateVisitorVehicle" parameterType="com.apt.visitorvehicle.model.VisitorVehicle">
         UPDATE visitor_vehicle
@@ -65,11 +66,13 @@
         WHERE visitor_vehicle_id = #{visitorVehicleId}
     </update>
 
-    <!-- API-035 | 방문차량 삭제 -->
-    <delete id="deleteVisitorVehicle" parameterType="Long">
-        DELETE FROM visitor_vehicle
+    <!-- API-035 | 방문차량 소프트 삭제 -->
+    <update id="deleteVisitorVehicle" parameterType="Long">
+        UPDATE visitor_vehicle
+        SET is_deleted = 1,
+            deleted_at = NOW()
         WHERE visitor_vehicle_id = #{visitorVehicleId}
-    </delete>
+    </update>
 
     <!-- 사이드 카드용 | 오늘 방문 차량 수 -->
     <select id="countTodayByUserId" resultType="int">
@@ -78,6 +81,7 @@
         WHERE user_id = #{userId}
           AND visit_date = CURDATE()
           AND status = 'APPROVED'
+          AND is_deleted = 0
     </select>
 
     <!-- 사이드 카드용 | 예비 방문 차량 수 (오늘 이후) -->
@@ -87,6 +91,7 @@
         WHERE user_id = #{userId}
           AND visit_date > CURDATE()
           AND status = 'APPROVED'
+          AND is_deleted = 0
     </select>
 
     <!-- 사이드 카드용 | 전체 등록 건수 -->
@@ -94,5 +99,6 @@
         SELECT COUNT(*)
         FROM visitor_vehicle
         WHERE user_id = #{userId}
+          AND is_deleted = 0
     </select>
 </mapper>

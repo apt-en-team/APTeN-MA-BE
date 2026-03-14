@@ -1,4 +1,4 @@
-package com.apt.mail.model;
+package com.apt.infra.mail.model;
 
 import lombok.Getter;
 import lombok.Setter;

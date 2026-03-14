@@ -1,4 +1,4 @@
-package com.apt.mail.dto.request;
+package com.apt.infra.mail.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
