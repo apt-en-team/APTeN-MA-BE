@@ -3,6 +3,7 @@ package com.apt.reservation.mapper;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.dto.response.AvailableSlotRes;
+import com.apt.reservation.dto.response.ReservationListRes;
 import com.apt.reservation.dto.response.ReservationRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -27,5 +28,8 @@ public interface ReservationMapper {
 
     //내 예약목록 조회
     List<ReservationRes> findAll(ReservationGetReq req);
+
+    //예약 취소
+    int cancelReservation(long id);
 
 }

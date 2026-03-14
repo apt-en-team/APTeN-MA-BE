@@ -47,5 +47,12 @@ public class ReservationController {
         return ResultResponse.success("조회 성공", reservationService.getReservationDetail(id,userPrincipal.getUserId()));
     }
 
+    //예약 취소 (API-057 / UI-039)
+    @DeleteMapping("/{id}")
+    public ResultResponse<?> cancel(@PathVariable long id
+                          , @AuthenticationPrincipal UserPrincipal userPrincipal){
+        reservationService.cancelReservation(id,userPrincipal.getUserId());
+        return ResultResponse.success("취소 성공", null);
+    }
 
 }

@@ -110,6 +110,13 @@
         LIMIT #{startIdx}, #{size}
     </select>
 
-
+    <!-- 예약 취소 -->
+    <update id="cancelReservation">
+        UPDATE reservation
+        SET seat_no = NULL,
+            status   = 'CANCELLED',
+            cancelled_at = NOW()
+        WHERE reservation_id = #{id}
+    </update>
 
 </mapper>

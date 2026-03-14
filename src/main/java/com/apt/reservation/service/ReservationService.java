@@ -7,6 +7,7 @@ import com.apt.facility.model.Facility;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.dto.response.AvailableSlotRes;
+import com.apt.reservation.dto.response.ReservationListRes;
 import com.apt.reservation.dto.response.ReservationRes;
 import com.apt.reservation.mapper.ReservationMapper;
 import lombok.RequiredArgsConstructor;
@@ -123,6 +124,21 @@ public class ReservationService {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
         return reservation;
-    };
+    }
+
+    //예약 취소(입주민)
+    public void cancelReservation(long id, long userId){
+
+        //본인 예약 확인
+        ReservationRes reservation = getReservationDetail(id, userId);
+
+        //1시간 전 예약 취소 방지
+        if(reservation.getReservationDate().equals(LocalDate.now()) &&
+                reservation.getStartTime().isBefore(LocalTime.now().plusHours(1))){
+            throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
+        }
+
+        reservationMapper.cancelReservation(id);
+    }
 
 }
