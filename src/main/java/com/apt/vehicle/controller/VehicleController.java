@@ -18,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /** 차량 관리 Controller */
 @RestController
@@ -66,8 +67,7 @@ public class VehicleController {
         return ResponseEntity.ok(ResultResponse.success("차량 삭제 성공", null));
     }
 
-    /** API-043 | 내 차량 입출차 기록 조회 | RESIDENT
-     *  ※ /api/admin/vehicles 보다 위에 선언해야 my-logs 가 {id} 로 오인되지 않음 */
+    /** API-043 | 내 차량 입출차 기록 조회 | RESIDENT */
     @GetMapping("/api/vehicles/my-logs")
     @PreAuthorize("hasRole('RESIDENT')")
     public ResponseEntity<ResultResponse<List<VehicleLogRes>>> getMyVehicleLogs(
@@ -76,13 +76,45 @@ public class VehicleController {
         return ResponseEntity.ok(ResultResponse.success("입출차 기록 조회 성공", result));
     }
 
-    /** API-042 | 전체 차량 목록 조회 | ADMIN
-     *  파라미터: household_id (세대 필터), page, size */
+    /** API-042 | 전체 차량 목록 조회 | ADMIN */
     @GetMapping("/api/admin/vehicles")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<VehiclePageRes<VehicleAdminRes>>> getAllVehicles(
             @ModelAttribute VehicleAdminSearchReq req) {
         VehiclePageRes<VehicleAdminRes> result = vehicleService.getAllVehicles(req);
         return ResponseEntity.ok(ResultResponse.success("전체 차량 목록 조회 성공", result));
+    }
+
+    /** ADMIN | 차량 통계 조회  */
+    @GetMapping("/api/admin/vehicles/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<Map<String, Long>>> getVehicleStats() {
+        return ResponseEntity.ok(ResultResponse.success("차량 통계 조회 성공", vehicleService.getVehicleStats()));
+    }
+
+    /** ADMIN | 차량 승인 */
+    @PatchMapping("/api/admin/vehicles/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<Void>> approveVehicle(
+            @PathVariable Long id,
+            @AuthenticationPrincipal JwtUser jwtUser) {
+        vehicleService.approveVehicle(id, jwtUser.getUserId());
+        return ResponseEntity.ok(ResultResponse.success("차량 승인 완료", null));
+    }
+
+    /** ADMIN | 차량 거부 */
+    @PatchMapping("/api/admin/vehicles/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<Void>> rejectVehicle(
+            @PathVariable Long id) {
+        vehicleService.rejectVehicle(id);
+        return ResponseEntity.ok(ResultResponse.success("차량 거부 완료", null));
+    }
+
+    /** ADMIN | 동 목록 조회 */
+    @GetMapping("/api/admin/vehicles/dongs")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<List<String>>> getDongs() {
+        return ResponseEntity.ok(ResultResponse.success("동 목록 조회 성공", vehicleService.getDongs()));
     }
 }
