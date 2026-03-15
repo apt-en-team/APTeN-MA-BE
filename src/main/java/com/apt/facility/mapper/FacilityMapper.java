@@ -1,4 +1,4 @@
-package com.apt.facility.Mapper;
+package com.apt.facility.mapper;
 
 import com.apt.facility.model.Facility;
 import org.apache.ibatis.annotations.Mapper;
