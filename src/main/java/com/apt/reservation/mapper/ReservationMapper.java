@@ -24,6 +24,8 @@ public interface ReservationMapper {
     int countSeatReserved(ReservationReq req); //좌석 중복 체크
     int countReserved(ReservationReq req); //정원 초과 체크
     void insertReservation(ReservationReq req);//insert
+
+    //예약 상세
     ReservationRes findReservationById(Long reservationId);//확인값 반환
 
     //내 예약목록 조회
@@ -31,5 +33,11 @@ public interface ReservationMapper {
 
     //예약 취소
     int cancelReservation(long id);
+
+    //관리자 예약목록 조회
+    List<ReservationListRes> findAllByAdmin(ReservationGetReq req);
+
+    //예약 전체 취소(관리자)
+    int cancelAllReservation(long facilityId);
 
 }

@@ -64,6 +64,8 @@ public enum ErrorCode {
     CANCEL_TIME_EXPIRED(400, "예약 1시간 전까지만 취소 가능합니다"),
     // GX 예약 승인이 이미 처리된 경우
     GX_ALREADY_PROCESSED(400, "이미 처리된 강의입니다"),
+    // [추가] 취소(삭제)할 예약이 존재하지 않는 경우
+    NOT_FOUND_TO_CANCEL(404, "취소할 예약 정보를 찾을 수 없습니다"),
 
     // ── 서버 오류 ─────────────────────────────────────────────────
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다");

@@ -37,6 +37,15 @@ public class ReservationService {
         return facility;
     }
 
+    // 예약 상태 조회 (없으면 404)
+    private ReservationRes getReservation(Long id) {
+        ReservationRes reservation = reservationMapper.findReservationById(id);
+        if(reservation.getStatus().equals("CANCELLED")||reservation.getStatus().equals("COMPLETED")){
+            throw new CustomException(ErrorCode.NOT_FOUND_TO_CANCEL);
+        }
+        return reservation;
+    }
+
     //매일 자정 확인된 예약 완료로 변경
     // 0 0 0 * * * 는 매일 00:00:00을 의미
     @Scheduled(cron = "0 0 0 * * *")
@@ -127,10 +136,13 @@ public class ReservationService {
     }
 
     //예약 취소(입주민)
+    @Transactional
     public void cancelReservation(long id, long userId){
 
         //본인 예약 확인
         ReservationRes reservation = getReservationDetail(id, userId);
+        //상태 확인
+        reservation = getReservation(id);
 
         //1시간 전 예약 취소 방지
         if(reservation.getReservationDate().equals(LocalDate.now()) &&
@@ -139,6 +151,32 @@ public class ReservationService {
         }
 
         reservationMapper.cancelReservation(id);
+    }
+
+    //관리자 전체 예약 조회
+    public List<ReservationListRes> getAdminReservationList(ReservationGetReq req){
+        return reservationMapper.findAllByAdmin(req);
+    }
+
+    //관리자 예약 상세
+    public ReservationRes getAdminReservationDetail(long id){
+        return reservationMapper.findReservationById(id);
+    }
+
+    //예약 강제 취소 - 부분 (관리자)
+    @Transactional
+    public void forceCancel(long reservationId){
+        //상태 확인
+        ReservationRes reservation = getReservation(reservationId);
+        reservationMapper.cancelReservation(reservationId);
+    }
+
+    //예약 강제 취소 - 전체 (관리자)
+    @Transactional
+    public void forceAllCancel(long facilityId){
+
+        Facility facility = getFacility(facilityId);
+        reservationMapper.cancelAllReservation(facilityId);
     }
 
 }

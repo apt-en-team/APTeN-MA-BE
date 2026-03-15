@@ -22,5 +22,6 @@ public class ReservationRes {
     private Integer seatNo;          // 좌석 없는 시설은 null
     private String status;
     private LocalDateTime createdAt;
+    private Integer currentCount;
 
 }

@@ -18,6 +18,7 @@ public class ReservationListRes {
     private String ho;
     private Long facilityId;
     private String facilityName;
+    private Integer maxCapacity;
     private Long programId;        // GX만 사용
     private LocalDate reservationDate;
     private LocalTime startTime;
