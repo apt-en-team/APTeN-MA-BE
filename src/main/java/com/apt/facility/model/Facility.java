@@ -1,6 +1,7 @@
 package com.apt.facility.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalTime;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 public class Facility {
 
     /** 시설 ID (PK) */
@@ -19,6 +21,9 @@ public class Facility {
 
     /** 시설 타입 ID (FK → facility_type.type_id) */
     private Long typeId;
+
+    /** 시설 타입명 (JOIN용) */
+    private String typeName;
 
     /** 시설명 (예: GX(오전), 독서실(남)) */
     private String name;

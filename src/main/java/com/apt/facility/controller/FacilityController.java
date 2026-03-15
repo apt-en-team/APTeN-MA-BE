@@ -1,22 +1,42 @@
 package com.apt.facility.controller;
 
 import com.apt.common.response.ResultResponse;
-import com.apt.facility.dto.request.FacilityReq;
-import com.apt.facility.dto.request.FacilityTypeReq;
 import com.apt.facility.dto.response.FacilityRes;
 import com.apt.facility.dto.response.FacilityTypeRes;
 import com.apt.facility.service.FacilityService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** 시설 관리 Controller */
+/** 시설 Controller | RESIDENT */
 @RestController
 @RequiredArgsConstructor
 public class FacilityController {
 
+    private final FacilityService facilityService;
+
+    /** API-044 | 시설 타입 목록 조회 */
+    @GetMapping("/api/admin/facility-types")
+    public ResponseEntity<ResultResponse<List<FacilityTypeRes>>> getAllTypes() {
+        return ResponseEntity.ok(ResultResponse.success("시설 타입 목록 조회 성공",
+                facilityService.getAllTypes()));
+    }
+
+    /** API-048 | 시설 목록 조회 */
+    @GetMapping("/api/facilities")
+    public ResponseEntity<ResultResponse<List<FacilityRes>>> getAllFacilities(
+            @RequestParam(required = false) Long typeId) {
+        return ResponseEntity.ok(ResultResponse.success("시설 목록 조회 성공",
+                facilityService.getAllFacilities(typeId)));
+    }
+
+    /** API-049 | 시설 상세 조회 */
+    @GetMapping("/api/facilities/{id}")
+    public ResponseEntity<ResultResponse<FacilityRes>> getFacility(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ResultResponse.success("시설 상세 조회 성공",
+                facilityService.getFacility(id)));
+    }
 }
