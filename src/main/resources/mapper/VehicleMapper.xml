@@ -43,6 +43,11 @@
             <if test="req.status != null and req.status != ''">AND v.status = #{req.status}</if>
             <if test="req.carType != null and req.carType != ''">AND v.car_type = #{req.carType}</if>
             <if test="req.dong != null and req.dong != ''">AND h.dong = #{req.dong}</if>
+            <if test="req.search != null and req.search != ''">
+                AND (v.license_plate LIKE CONCAT('%', #{req.search}, '%')
+                OR v.car_model     LIKE CONCAT('%', #{req.search}, '%')
+                OR h.dong          LIKE CONCAT('%', #{req.search}, '%'))
+            </if>
         </where>
         ORDER BY v.created_at DESC
         LIMIT #{size} OFFSET #{offset}
@@ -57,6 +62,11 @@
             <if test="status != null and status != ''">AND v.status = #{status}</if>
             <if test="carType != null and carType != ''">AND v.car_type = #{carType}</if>
             <if test="dong != null and dong != ''">AND h.dong = #{dong}</if>
+            <if test="search != null and search != ''">
+                AND (v.license_plate LIKE CONCAT('%', #{search}, '%')
+                OR v.car_model     LIKE CONCAT('%', #{search}, '%')
+                OR h.dong          LIKE CONCAT('%', #{search}, '%'))
+            </if>
         </where>
     </select>
 

@@ -26,4 +26,7 @@ public class VehicleAdminSearchReq {
 
     /** 페이지 크기 (기본값 10) */
     private int size = 10;
+
+    /** 검색어 (차량번호, 차종) */
+    private String search;
 }
