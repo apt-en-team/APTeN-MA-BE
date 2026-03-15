@@ -92,4 +92,5 @@ public class VisitorVehicleController {
                 userPrincipal.getUserId(), visitorVehicleId);
         return ResponseEntity.ok().build();
     }
+
 }

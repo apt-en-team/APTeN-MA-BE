@@ -1,6 +1,8 @@
 package com.apt.visitorvehicle.mapper;
 
+import com.apt.visitorvehicle.dto.request.AdminVisitorVehicleGetReq;
 import com.apt.visitorvehicle.dto.request.VisitorVehicleGetReq;
+import com.apt.visitorvehicle.dto.response.AdminVisitorVehicleRes;
 import com.apt.visitorvehicle.model.VisitorVehicle;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -35,4 +37,10 @@ public interface VisitorVehicleMapper {
 
     // 전체 등록 건수 (필터 무관)
     int countAllByUserId(Long userId);
+
+    /** API-069 | 관리자 방문차량 목록 조회 (페이징) */
+    List<AdminVisitorVehicleRes> findAdminVisitorVehicles(AdminVisitorVehicleGetReq req);
+
+    /** API-069 | 관리자 방문차량 총 건수 */
+    int countAdminVisitorVehicles(AdminVisitorVehicleGetReq req);
 }
