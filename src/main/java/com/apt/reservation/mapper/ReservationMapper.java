@@ -5,6 +5,7 @@ import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.dto.response.AvailableSlotRes;
 import com.apt.reservation.dto.response.ReservationListRes;
 import com.apt.reservation.dto.response.ReservationRes;
+import com.apt.reservation.model.GxProgram;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -39,5 +40,16 @@ public interface ReservationMapper {
 
     //예약 전체 취소(관리자)
     int cancelAllReservation(long facilityId);
+
+    //Gx프로그램 조회
+    GxProgram findProgramById(Long programId);
+    //대기목록 조회(선착순 정렬)
+    List<ReservationRes> findPendingByProgramId(Long programId);
+    //대기 -> 확정 처리
+    int approveReservation(long reservationId);
+    //대기 -> 취소 처리 (정원초과 분)
+    int cancelOverflowReservation(long reservationId);
+    //승인인원 = 맥스인원 이면 프로그램 CLOSED
+    int closeProgram (long programId);
 
 }

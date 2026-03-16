@@ -42,4 +42,10 @@ public class AdminReservationController {
         return ResultResponse.success("취소 성공", null);
     }
 
+    //GX 승인처리 (API-061 / UI-043)
+    @PatchMapping("/approve/{programId}")
+    public ResultResponse<?> approveGx(@PathVariable Long programId) {
+        return ResultResponse.success("승인 완료", reservationService.approveGx(programId));
+    }
+
 }

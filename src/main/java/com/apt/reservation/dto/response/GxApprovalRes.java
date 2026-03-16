@@ -9,12 +9,7 @@ import java.time.LocalTime;
 @Getter
 @Setter
 public class GxApprovalRes {
-
-    private Long      facilityId;
-    private LocalDate reservationDate;
-    private LocalTime startTime;
-    private int       confirmedCount;
-    private int       cancelledCount;
-    private String    result;         // "SUCCESS"
-
+    private Long programId;
+    private int confirmedCount; // 승인된 인원
+    private int cancelledCount; // 정원 초과로 취소된 인원
 }

@@ -7,9 +7,11 @@ import com.apt.facility.model.Facility;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
 import com.apt.reservation.dto.response.AvailableSlotRes;
+import com.apt.reservation.dto.response.GxApprovalRes;
 import com.apt.reservation.dto.response.ReservationListRes;
 import com.apt.reservation.dto.response.ReservationRes;
 import com.apt.reservation.mapper.ReservationMapper;
+import com.apt.reservation.model.GxProgram;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -177,6 +179,48 @@ public class ReservationService {
 
         Facility facility = getFacility(facilityId);
         reservationMapper.cancelAllReservation(facilityId);
+    }
+
+    //GX 승인
+    @Transactional
+    public GxApprovalRes approveGx(Long programId) {
+
+        //Gx프로그램 조회
+        GxProgram gxProgram = reservationMapper.findProgramById(programId);
+
+        //PENDING 목록 (선착순)
+        List<ReservationRes> list = reservationMapper.findPendingByProgramId(programId);
+
+        //오류 체그 (프로그램 조회)
+        getFacility(gxProgram.getFacilityId());
+        //오류 체크 (상태 체크,,,필요한가? 어차피 XMl에서 상태가 대기인 정확한 정보를 들고옴)
+
+        int confirmedCount = 0;
+        int cancelledCount = 0;
+
+        //목록 값을 하나씩 넣어 승인 or 취소 로 상태 변경
+        for(ReservationRes gxReservation : list ) {
+            if(confirmedCount < gxProgram.getMaxCapacity()){
+                reservationMapper.approveReservation(gxReservation.getReservationId());
+                confirmedCount++;
+            }else {
+                reservationMapper.cancelOverflowReservation(gxReservation.getReservationId());
+                cancelledCount++;
+            }
+        }
+
+        //최대인원이 차면 프로그램 상태는 close로 변경 더이상 신청을 받지 않는다.
+        if(confirmedCount == gxProgram.getMaxCapacity()){
+            reservationMapper.closeProgram(programId);
+        }
+
+        //프론트 전달 값 셋팅
+        GxApprovalRes res = new GxApprovalRes();
+        res.setProgramId(programId);
+        res.setConfirmedCount(confirmedCount);
+        res.setCancelledCount(cancelledCount);
+
+        return res;
     }
 
 }

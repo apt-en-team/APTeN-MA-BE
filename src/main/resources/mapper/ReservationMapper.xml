@@ -82,7 +82,12 @@
              WHERE r2.facility_id      = r.facility_id
                AND r2.reservation_date = r.reservation_date
                AND r2.start_time       = r.start_time
-               AND r2.status           = 'CONFIRMED') AS currentCount
+               AND r2.status           = 'CONFIRMED') AS currentCount,
+            (SELECT COUNT(*)
+             FROM reservation r2
+             WHERE r2.program_id = r.program_id
+               AND r2.status     = 'PENDING'
+               AND r.program_id IS NOT NULL) AS pendingCount
         FROM reservation r
                  JOIN facility f ON f.facility_id = r.facility_id
         WHERE r.reservation_id = #{reservationId}
@@ -139,7 +144,7 @@
     <select id="findAllByAdmin" resultType="com.apt.reservation.dto.response.ReservationListRes">
         SELECT
         r.reservation_id, r.reservation_date, r.start_time, r.end_time,
-        r.seat_no, r.status, r.created_at, r.cancelled_at, r.program_id,
+        r.seat_no, r.status, r.created_at, r.cancelled_at, r.program_id, r.approved_at,
         f.facility_id, f.name AS facilityName, f.max_capacity,
         u.user_id, u.name AS userName,
         h.dong, h.ho,
@@ -148,7 +153,12 @@
         WHERE r2.facility_id      = r.facility_id
         AND r2.reservation_date = r.reservation_date
         AND r2.start_time       = r.start_time
-        AND r2.status           = 'CONFIRMED') AS currentCount
+        AND r2.status           = 'CONFIRMED') AS currentCount,
+        (SELECT COUNT(*)
+        FROM reservation r2
+        WHERE r2.program_id = r.program_id
+        AND r2.status     = 'PENDING'
+        AND r.program_id IS NOT NULL) AS pendingCount
         FROM reservation r
         JOIN facility f ON r.facility_id = f.facility_id
         JOIN user u ON r.user_id = u.user_id
@@ -164,5 +174,53 @@
         ORDER BY r.reservation_date DESC, r.start_time DESC
         LIMIT #{startIdx}, #{size}
     </select>
+
+    <!-- Gx프로그램 조회 model 셋팅-->
+    <select id="findProgramById">
+        SELECT gx.program_id, gx.start_date, gx.end_date, gx.days_of_week, gx.status, gx.created_at,
+               f.facility_id, f.max_capacity
+        FROM gx_program gx
+        JOIN facility f
+        ON gx.facility_id = f.facility_id
+        WHERE gx.program_id = #{programId}
+    </select>
+
+    <!-- 대기목록 조회(선착순 정렬) -->
+    <select id="findPendingByProgramId">
+        SELECT r.reservation_id, r.user_id, r.program_id, r.start_time, r.end_time, r.seat_no,r.status, r.created_at,
+               f.facility_id, f.name as facilityName
+
+        FROM reservation r
+        JOIN facility f
+        ON r.facility_id = f.facility_id
+        WHERE r.program_id = #{programId}
+        AND r.status = 'PENDING'
+        ORDER BY r.created_at
+    </select>
+
+    <!-- 대기 -> 확정 처리 -->
+    <update id="approveReservation">
+        UPDATE reservation
+        SET status   = 'CONFIRMED',
+            approved_at = NOW()
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 대기 -> 취소 처리 (정원초과 분) -->
+    <update id="cancelOverflowReservation">
+        UPDATE reservation
+        SET status   = 'CANCELLED',
+            cancelled_at = NOW()
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 승인인원 = 맥스인원 이면 프로그램 CLOSED -->
+    <update id="closeProgram">
+        UPDATE gx_program
+        SET status   = 'CLOSED',
+            updated_at = NOW()
+        WHERE program_id = #{programId}
+    </update>
+
 
 </mapper>

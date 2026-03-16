@@ -19,14 +19,16 @@ public class ReservationListRes {
     private Long facilityId;
     private String facilityName;
     private Integer maxCapacity;
-    private Long programId;        // GX만 사용
+    private Long programId; // GX만 사용
     private LocalDate reservationDate;
     private LocalTime startTime;
     private LocalTime endTime;
     private Integer seatNo;
-    private Integer currentCount;  // 좌석 없는 시설 현재 예약 인원
+    private Integer currentCount; // 일반 시설 확정 인원
+    private Integer pendingCount; // GX 대기 인원
     private String  status;
     private LocalDateTime createdAt;
     private LocalDateTime cancelledAt;
+    private LocalDateTime approvedAt;
 
 }
