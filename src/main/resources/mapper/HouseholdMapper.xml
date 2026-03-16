@@ -21,29 +21,29 @@
     <select id="findAll" resultType="com.apt.household.dto.response.HouseholdRes">
         SELECT
         h.household_id AS householdId,
-        h.dong, h.ho,
-        COALESCE((
-        SELECT hh.status FROM household_history hh
-        WHERE hh.household_id = h.household_id
-        ORDER BY hh.changed_at DESC LIMIT 1
-        ), '공실') AS status,
-        (SELECT COUNT(*) FROM vehicle v WHERE v.household_id = h.household_id) AS carCount,
-        (
-        SELECT COUNT(*)
-        FROM user u
-        WHERE u.household_id = h.household_id
-        AND u.status = 'PENDING'
+        h.dong,
+        h.ho,
+        COALESCE(latest.status, '공실') AS status,
+        COUNT(DISTINCT v.vehicle_id) AS carCount,
+        COUNT(DISTINCT CASE WHEN u.status = 'PENDING'
         AND u.is_deleted = false
-        ) AS pendingCount,
-        GREATEST(
-        h.created_at,
-        COALESCE((
-        SELECT hh.changed_at FROM household_history hh
-        WHERE hh.household_id = h.household_id
-        ORDER BY hh.changed_at DESC LIMIT 1
-        ), h.created_at)
-        ) AS lastChangedAt
+        THEN u.user_id END) AS pendingCount,
+        GREATEST(h.created_at, COALESCE(latest.changed_at, h.created_at)) AS lastChangedAt
         FROM household h
+
+        <!-- 최신 이력 1개만 미리 골라서 JOIN (ROW_NUMBER) -->
+        LEFT JOIN (
+        SELECT
+        household_id,
+        status,
+        changed_at,
+        ROW_NUMBER() OVER (PARTITION BY household_id ORDER BY changed_at DESC) AS rn
+        FROM household_history
+        ) latest ON latest.household_id = h.household_id AND latest.rn = 1
+
+        LEFT JOIN vehicle v ON v.household_id = h.household_id
+        LEFT JOIN user    u ON u.household_id = h.household_id
+
         <where>
             <if test="dong != null and dong != ''">
                 h.dong = #{dong}
@@ -52,13 +52,12 @@
                 AND h.ho LIKE CONCAT('%', #{ho}, '%')
             </if>
             <if test="status != null and status != ''">
-                AND COALESCE((
-                SELECT hh.status FROM household_history hh
-                WHERE hh.household_id = h.household_id
-                ORDER BY hh.changed_at DESC LIMIT 1
-                ), '공실') = #{status}
+                AND COALESCE(latest.status, '공실') = #{status}
             </if>
         </where>
+
+        GROUP BY h.household_id, h.dong, h.ho, latest.status, latest.changed_at, h.created_at
+
         ORDER BY pendingCount DESC, h.dong, CAST(h.ho AS UNSIGNED)
         LIMIT #{startIdx}, #{size}
     </select>
@@ -223,53 +222,47 @@
         감싸는 메인 SELECT 에서 집계
     -->
     <select id="getStats" resultType="com.apt.household.dto.response.HouseholdStatsRes">
-        SELECT COUNT(*)                                                  AS total,
-               SUM(CASE WHEN sub.latest_status = '입주' THEN 1 ELSE 0 END) AS occupied,
-               SUM(CASE
-                       WHEN sub.latest_status IS NULL
-                           OR sub.latest_status = '퇴거' THEN 1
-                       ELSE 0 END)                                       AS `empty`,
-               (SELECT COUNT(DISTINCT household_id)
-                FROM household_history
-                WHERE status = '입주'
-                          AND YEAR(changed_at) = YEAR(NOW())
-              AND MONTH(changed_at) = MONTH(NOW())
-           )                                                         AS moveIn,
-           (SELECT COUNT(DISTINCT household_id)
-        FROM household_history
-        WHERE status = '퇴거'
-          AND YEAR(changed_at) = YEAR(NOW())
-          AND MONTH(changed_at) = MONTH(NOW())
-            )                                                         AS moveOut,
-            (SELECT COUNT(*)
+        SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN latest.status = '입주' THEN 1 ELSE 0 END) AS occupied,
+        SUM(CASE WHEN latest.status IS NULL
+        OR latest.status = '퇴거' THEN 1 ELSE 0 END) AS `empty`,
+        SUM(COALESCE(month_hist.had_move_in,  0)) AS moveIn,
+        SUM(COALESCE(month_hist.had_move_out, 0)) AS moveOut,
+        SUM(CASE
+        WHEN active_user.household_id IS NULL
+        AND COALESCE(latest.changed_at, h.created_at) <![CDATA[ <= ]]> DATE_SUB(NOW(), INTERVAL 1 MONTH)
+        THEN 1 ELSE 0 END) AS needCare
         FROM household h
-        WHERE NOT EXISTS (
-            SELECT 1 FROM user u
-            WHERE u.household_id = h.household_id
-          AND u.is_deleted = false
-            )
-          AND (
-            (NOT EXISTS (
-            SELECT 1 FROM household_history hh
-            WHERE hh.household_id = h.household_id
-            ) AND h.created_at &lt;= DATE_SUB(NOW(), INTERVAL 1 MONTH))
-           OR
-            (SELECT hh.changed_at FROM household_history hh
-            WHERE hh.household_id = h.household_id
-            ORDER BY hh.changed_at DESC LIMIT 1
-            ) &lt;= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-            )
-            )                                                         AS needCare
-        FROM (
-            SELECT h.household_id,
-            (SELECT hh.status
-            FROM household_history hh
-            WHERE hh.household_id = h.household_id
-            ORDER BY hh.changed_at DESC
-            LIMIT 1
-            ) AS latest_status
-            FROM household h
-            ) sub
+
+        <!-- 최신 이력 1개만 (occupied / empty / needCare 용) -->
+        LEFT JOIN (
+        SELECT
+        household_id,
+        status,
+        changed_at,
+        ROW_NUMBER() OVER (PARTITION BY household_id ORDER BY changed_at DESC) AS rn
+        FROM household_history
+        ) latest ON latest.household_id = h.household_id AND latest.rn = 1
+
+        <!-- 이번 달 입주/퇴거 여부 (moveIn / moveOut 한 번에) -->
+        LEFT JOIN (
+        SELECT
+        household_id,
+        MAX(CASE WHEN status = '입주' THEN 1 ELSE 0 END) AS had_move_in,
+        MAX(CASE WHEN status = '퇴거' THEN 1 ELSE 0 END) AS had_move_out
+        FROM household_history
+        WHERE YEAR(changed_at)  = YEAR(NOW())
+        AND MONTH(changed_at) = MONTH(NOW())
+        GROUP BY household_id
+        ) month_hist ON month_hist.household_id = h.household_id
+
+        <!-- 활성 입주민 존재 여부 (needCare 판단용) -->
+        LEFT JOIN (
+        SELECT DISTINCT household_id
+        FROM user
+        WHERE is_deleted = false
+        ) active_user ON active_user.household_id = h.household_id
     </select>
 
 </mapper>
