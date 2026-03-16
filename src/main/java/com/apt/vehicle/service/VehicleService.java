@@ -83,17 +83,27 @@ public class VehicleService {
 //    }
 
     /** API-040 | 차량 수정 */
+    @Transactional
     public VehicleRes updateVehicle(Long vehicleId, VehicleUpdateReq req, Long userId) {
         Vehicle vehicle = vehicleMapper.findById(vehicleId);
         if (vehicle == null) throw new CustomException(ErrorCode.VEHICLE_NOT_FOUND);
         if (!vehicle.getUserId().equals(userId)) throw new CustomException(ErrorCode.FORBIDDEN);
 
+        // 번호판 변경 시 공백 제거 + 중복 체크 (자기 자신 제외)
         if (req.getLicensePlate() != null && !req.getLicensePlate().isBlank()) {
-            vehicle.setLicensePlate(req.getLicensePlate());
+            String cleanPlate = req.getLicensePlate().replaceAll("\\s", "");
+            if (!cleanPlate.equals(vehicle.getLicensePlate())) {
+                int count = vehicleMapper.existsByLicensePlate(cleanPlate);
+                if (count > 0) throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
+            }
+            vehicle.setLicensePlate(cleanPlate);
         }
+
+        // 차종 변경
         if (req.getCarModel() != null && !req.getCarModel().isBlank()) {
             vehicle.setCarModel(req.getCarModel());
         }
+
         vehicleMapper.updateVehicle(vehicle);
         return VehicleRes.ofUpdate(vehicle);
     }
