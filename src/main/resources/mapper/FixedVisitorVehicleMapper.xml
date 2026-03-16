@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.visitorvehicle.mapper.FixedVisitorVehicleMapper">
+    <!-- API-062 | 고정 방문차량 등록 -->
+    <insert id="insertFixedVisitorVehicle" useGeneratedKeys="true" keyProperty="fixedId">
+        INSERT INTO fixed_visitor_vehicle
+        (user_id, vehicle_number, visitor_name, purpose, start_date, end_date, created_at)
+        VALUES (#{userId}, #{vehicleNumber}, #{visitorName}, #{purpose}, #{startDate}, #{endDate}, NOW())
+    </insert>
+
+
+</mapper>
