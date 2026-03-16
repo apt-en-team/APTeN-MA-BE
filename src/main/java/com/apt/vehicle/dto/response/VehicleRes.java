@@ -24,6 +24,9 @@ public class VehicleRes {
     /** 등록자 ID (API-039 등록 응답에만 포함) */
     private Long userId;
 
+    /** 등록자 이름 */
+    private String userName;
+
     /** 차량 번호판 */
     private String licensePlate;
 
@@ -42,8 +45,9 @@ public class VehicleRes {
                 .vehicleId(v.getVehicleId())
                 .licensePlate(v.getLicensePlate())
                 .carModel(v.getCarModel())
-                .status(v.getStatus())        // Model은 String 그대로
+                .status(v.getStatus())
                 .createdAt(v.getCreatedAt())
+                .userName(v.getUserName())
                 .build();
     }
 

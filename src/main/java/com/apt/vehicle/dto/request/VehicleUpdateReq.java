@@ -9,7 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class VehicleUpdateReq {
 
-    /** 차종 (선택, 번호판은 수정 불가) */
+    /** 차량 번호판 (선택) */
+    @Size(max = 20, message = "차량 번호는 20자 이내여야 합니다.")
+    private String licensePlate;
+
+    /** 차종 (선택) */
     @Size(max = 50, message = "차종은 50자 이내여야 합니다.")
     private String carModel;
 }

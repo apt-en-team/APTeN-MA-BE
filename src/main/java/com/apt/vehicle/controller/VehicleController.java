@@ -1,7 +1,7 @@
 package com.apt.vehicle.controller;
 
 import com.apt.common.response.ResultResponse;
-import com.apt.common.security.JwtUser;
+import com.apt.common.security.UserPrincipal;
 import com.apt.vehicle.dto.request.VehicleReq;
 import com.apt.vehicle.dto.request.VehicleUpdateReq;
 import com.apt.vehicle.dto.response.VehicleLogRes;
@@ -27,9 +27,9 @@ public class VehicleController {
     @GetMapping("/api/vehicles/my")
     @PreAuthorize("hasRole('RESIDENT')")
     public ResponseEntity<ResultResponse<List<VehicleRes>>> getMyVehicles(
-            @AuthenticationPrincipal JwtUser jwtUser) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(ResultResponse.success("내 차량 목록 조회 성공",
-                vehicleService.getMyVehicles(jwtUser.getUserId())));
+                vehicleService.getMyVehicles(userPrincipal.getUserId())));
     }
 
     /** API-039 | 차량 등록 */
@@ -37,9 +37,9 @@ public class VehicleController {
     @PreAuthorize("hasRole('RESIDENT')")
     public ResponseEntity<ResultResponse<VehicleRes>> registerVehicle(
             @RequestBody @Valid VehicleReq req,
-            @AuthenticationPrincipal JwtUser jwtUser) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(ResultResponse.success("차량 등록 성공",
-                vehicleService.registerVehicle(req, jwtUser.getUserId())));
+                vehicleService.registerVehicle(req, userPrincipal.getUserId())));
     }
 
     /** API-040 | 차량 수정 */
@@ -48,9 +48,9 @@ public class VehicleController {
     public ResponseEntity<ResultResponse<VehicleRes>> updateVehicle(
             @PathVariable Long id,
             @RequestBody VehicleUpdateReq req,
-            @AuthenticationPrincipal JwtUser jwtUser) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(ResultResponse.success("차량 수정 성공",
-                vehicleService.updateVehicle(id, req, jwtUser.getUserId())));
+                vehicleService.updateVehicle(id, req, userPrincipal.getUserId())));
     }
 
     /** API-041 | 차량 삭제 */
@@ -58,8 +58,8 @@ public class VehicleController {
     @PreAuthorize("hasRole('RESIDENT')")
     public ResponseEntity<ResultResponse<Void>> deleteVehicle(
             @PathVariable Long id,
-            @AuthenticationPrincipal JwtUser jwtUser) {
-        vehicleService.deleteVehicle(id, jwtUser.getUserId());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        vehicleService.deleteVehicle(id, userPrincipal.getUserId());
         return ResponseEntity.ok(ResultResponse.success("차량 삭제 성공", null));
     }
 
@@ -67,8 +67,8 @@ public class VehicleController {
     @GetMapping("/api/vehicles/my-logs")
     @PreAuthorize("hasRole('RESIDENT')")
     public ResponseEntity<ResultResponse<List<VehicleLogRes>>> getMyVehicleLogs(
-            @AuthenticationPrincipal JwtUser jwtUser) {
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(ResultResponse.success("입출차 기록 조회 성공",
-                vehicleService.getMyVehicleLogs(jwtUser.getUserId())));
+                vehicleService.getMyVehicleLogs(userPrincipal.getUserId())));
     }
 }
