@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.visitorvehicle.mapper.VisitorVehicleMapper">
+
+    <!-- ==================== 입주민 ==================== -->
+
+    <!-- API-030 | 방문차량 등록: status는 자동 승인(APPROVED) 고정, created_at은 현재 시각 -->
+    <insert id="insertVisitorVehicle" useGeneratedKeys="true" keyProperty="visitorVehicleId">
+        INSERT INTO visitor_vehicle (user_id, license_plate, visitor_name, visit_purpose, visit_date, status, created_at)
+        VALUES (#{userId}, #{licensePlate}, #{visitorName}, #{visitPurpose}, #{visitDate}, 'APPROVED', NOW())
+    </insert>
+
+    <!-- API-031 | 공통 WHERE 조건: 목록 조회 + 카운트 쿼리에서 재사용 -->
+    <sql id="myVehicleFilter">
+        WHERE user_id = #{userId}
+        AND is_deleted = 0
+        <if test="req.licensePlate != null and req.licensePlate != ''">
+            AND license_plate LIKE CONCAT('%', #{req.licensePlate}, '%')
+        </if>
+        <if test="req.visitorName != null and req.visitorName != ''">
+            AND visitor_name LIKE CONCAT('%', #{req.visitorName}, '%')
+        </if>
+        <if test="req.visitDate != null">
+            AND visit_date = #{req.visitDate}
+        </if>
+    </sql>
+
+    <!-- API-031 | 내 방문차량 목록 조회: 필터 + 페이징, 최신 등록순 정렬 -->
+    <select id="findByUserIdWithFilter" resultType="com.apt.visitorvehicle.model.VisitorVehicle">
+        SELECT visitor_vehicle_id, user_id, license_plate, visitor_name,
+        visit_date, visit_purpose, status, created_at
+        FROM visitor_vehicle
+        <include refid="myVehicleFilter"/>
+        ORDER BY created_at DESC
+        LIMIT #{req.startIdx}, #{req.size}
+    </select>
+
+    <!-- API-031 | 내 방문차량 총 개수: totalPages 계산용 -->
+    <select id="countByUserIdWithFilter" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        <include refid="myVehicleFilter"/>
+    </select>
+
+    <!-- API-032 | 방문차량 상세 조회: PK + 소프트 삭제 제외 -->
+    <select id="findById" resultType="com.apt.visitorvehicle.model.VisitorVehicle">
+        SELECT visitor_vehicle_id,
+               user_id,
+               license_plate,
+               visitor_name,
+               visit_date,
+               visit_purpose,
+               status,
+               created_at
+        FROM visitor_vehicle
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+          AND is_deleted = 0
+    </select>
+
+    <!-- API-034, API-068 | 방문차량 수정 및 취소: 수정/취소 상태 변경 공용 -->
+    <update id="updateVisitorVehicle" parameterType="com.apt.visitorvehicle.model.VisitorVehicle">
+        UPDATE visitor_vehicle
+        SET license_plate = #{licensePlate},
+            visitor_name  = #{visitorName},
+            visit_purpose = #{visitPurpose},
+            visit_date    = #{visitDate},
+            status        = #{status}
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </update>
+
+    <!-- API-067 | 방문차량 소프트 삭제: is_deleted=1, deleted_at 기록 (물리 삭제 아님) -->
+    <update id="deleteVisitorVehicle" parameterType="Long">
+        UPDATE visitor_vehicle
+        SET is_deleted = 1,
+            deleted_at = NOW()
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </update>
+
+    <!-- ==================== 입주민 사이드 카드 통계 ==================== -->
+
+    <!-- 오늘 방문 차량 수: visit_date = 오늘, APPROVED 상태만 -->
+    <select id="countTodayByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+          AND visit_date = CURDATE()
+          AND status = 'APPROVED'
+          AND is_deleted = 0
+    </select>
+
+    <!-- 예정 방문 차량 수: visit_date > 오늘, APPROVED 상태만 -->
+    <select id="countUpcomingByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+          AND visit_date > CURDATE()
+          AND status = 'APPROVED'
+          AND is_deleted = 0
+    </select>
+
+    <!-- 전체 등록 건수: 필터 무관, 소프트 삭제 제외 -->
+    <select id="countAllByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE user_id = #{userId}
+          AND is_deleted = 0
+    </select>
+
+    <!-- ==================== 관리자 ==================== -->
+
+    <!-- API-069 | 관리자 방문차량 목록 조회: user/household JOIN으로 등록자 정보 포함, 날짜/차량번호 필터 + 페이징 -->
+    <select id="findAdminVisitorVehicles" resultType="AdminVisitorVehicleRes">
+        SELECT vv.visitor_vehicle_id,
+        vv.license_plate,
+        vv.visitor_name,
+        vv.visit_purpose,
+        vv.visit_date,
+        vv.status,
+        u.name AS user_name,
+        h.dong,
+        h.ho
+        FROM visitor_vehicle vv
+        JOIN user u ON vv.user_id = u.user_id
+        JOIN household h ON u.household_id = h.household_id
+        WHERE vv.is_deleted = 0
+        <if test="visitDate != null">
+            AND vv.visit_date = #{visitDate}
+        </if>
+        <if test="licensePlate != null and licensePlate != ''">
+            AND vv.license_plate LIKE CONCAT('%', #{licensePlate}, '%')
+        </if>
+        ORDER BY vv.created_at DESC
+        LIMIT #{startIdx}, #{size}
+    </select>
+
+    <!-- API-069 | 관리자 방문차량 총 건수: totalPages 계산용 -->
+    <select id="countAdminVisitorVehicles" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle vv
+        JOIN user u ON vv.user_id = u.user_id
+        WHERE vv.is_deleted = 0
+        <if test="visitDate != null">
+            AND vv.visit_date = #{visitDate}
+        </if>
+        <if test="licensePlate != null and licensePlate != ''">
+            AND vv.license_plate LIKE CONCAT('%', #{licensePlate}, '%')
+        </if>
+    </select>
+
+    <!-- 오늘 방문 예정 건수: Java LocalDate 파라미터 사용 (CURDATE() 대신 UTC 오차 방지) -->
+    <select id="countAdminToday" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE is_deleted = 0
+          AND visit_date = #{today}
+    </select>
+
+    <!-- 내일 방문 예정 건수: Java LocalDate 파라미터 사용 (CURDATE() 대신 UTC 오차 방지) -->
+    <select id="countAdminTomorrow" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE is_deleted = 0
+          AND visit_date = #{tomorrow}
+    </select>
+
+    <!-- 이번 달 방문 건수: 연/월 기준 집계 -->
+    <select id="countAdminThisMonth" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE is_deleted = 0
+            AND YEAR(visit_date) = #{year}
+          AND MONTH(visit_date) = #{month}
+    </select>
+
+    <!-- 전체 등록 건수: 소프트 삭제 제외 전체 누적 -->
+    <select id="countAdminTotal" resultType="int">
+        SELECT COUNT(*)
+        FROM visitor_vehicle
+        WHERE is_deleted = 0
+    </select>
+
+</mapper>

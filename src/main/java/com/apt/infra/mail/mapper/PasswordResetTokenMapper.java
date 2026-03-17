@@ -1,6 +1,6 @@
-package com.apt.mail.mapper;
+package com.apt.infra.mail.mapper;
 
-import com.apt.mail.model.PasswordResetToken;
+import com.apt.infra.mail.model.PasswordResetToken;
 import org.apache.ibatis.annotations.Mapper;
 
 // 비밀번호 재설정 토큰 DB 접근

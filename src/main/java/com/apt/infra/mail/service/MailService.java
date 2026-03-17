@@ -1,10 +1,10 @@
-package com.apt.mail.service;
+package com.apt.infra.mail.service;
 
 import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
-import com.apt.mail.dto.request.ResetPasswordReq;
-import com.apt.mail.mapper.PasswordResetTokenMapper;
-import com.apt.mail.model.PasswordResetToken;
+import com.apt.infra.mail.dto.request.ResetPasswordReq;
+import com.apt.infra.mail.mapper.PasswordResetTokenMapper;
+import com.apt.infra.mail.model.PasswordResetToken;
 import com.apt.user.mapper.UserMapper;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
