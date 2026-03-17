@@ -18,4 +18,6 @@ public class FixedVisitorVehicle {
     private LocalDate startDate;       // 고정 시작일
     private LocalDate endDate;         // 고정 종료일 (NULL이면 무기한)
     private LocalDateTime createdAt;   // 등록 일시
+    private int isDeleted;
+    private LocalDateTime deletedAt;
 }
