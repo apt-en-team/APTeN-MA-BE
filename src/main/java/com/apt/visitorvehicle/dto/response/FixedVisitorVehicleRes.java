@@ -17,4 +17,9 @@ public class FixedVisitorVehicleRes {
     private LocalDate startDate;       // 고정 시작일
     private LocalDate endDate;         // 고정 종료일
     private LocalDateTime createdAt;   // 등록 일시
+
+    // 관리자 목록 조회 시 JOIN으로 채워짐 (입주민 조회 시 null)
+    private String userName;
+    private String dong;
+    private String ho;
 }

@@ -17,8 +17,6 @@ import java.util.List;
 @Mapper
 public interface VisitorVehicleMapper {
 
-    // ==================== 입주민 ====================
-
     /** API-030 | 방문차량 등록 - 자동 승인(APPROVED) 상태로 INSERT */
     void insertVisitorVehicle(VisitorVehicle visitorVehicle);
 
@@ -45,8 +43,6 @@ public interface VisitorVehicleMapper {
 
     /** 전체 등록 건수 - 필터 무관, 소프트 삭제 제외 */
     int countAllByUserId(Long userId);
-
-    // ==================== 관리자 ====================
 
     /** API-069 | 관리자 방문차량 목록 조회 - 날짜/차량번호 필터 + 페이징 */
     List<AdminVisitorVehicleRes> findAdminVisitorVehicles(AdminVisitorVehicleGetReq req);

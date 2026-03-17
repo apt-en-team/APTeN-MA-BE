@@ -3,6 +3,7 @@ package com.apt.visitorvehicle.service;
 import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
 import com.apt.visitorvehicle.dto.request.FixedVisitorVehicleReq;
+import com.apt.visitorvehicle.dto.response.AdminFixedVisitorVehicleStatsRes;
 import com.apt.visitorvehicle.dto.response.FixedVisitorVehicleListRes;
 import com.apt.visitorvehicle.dto.response.FixedVisitorVehicleRes;
 import com.apt.visitorvehicle.mapper.FixedVisitorVehicleMapper;
@@ -77,5 +78,31 @@ public class FixedVisitorVehicleService {
     public void deleteFixedVisitorVehicle(Long userId, Long fixedId) {
         findMyFixed(userId, fixedId);
         fixedVisitorVehicleMapper.deleteFixedVisitorVehicle(fixedId);
+    }
+
+    // 관리자 전체 고정 방문차량 목록 조회
+    public FixedVisitorVehicleListRes getAdminFixedVisitorVehicles(String vehicleNumber, String dong, int page, int size) {
+        int startIdx = (page - 1) * size;
+        List<FixedVisitorVehicleRes> list = fixedVisitorVehicleMapper.findAdminFixedVehicles(vehicleNumber, dong, startIdx, size);
+        int totalCount = fixedVisitorVehicleMapper.countAdminFixedVehicles(vehicleNumber, dong);
+
+        FixedVisitorVehicleListRes result = new FixedVisitorVehicleListRes();
+        result.setContent(list);
+        result.setPage(page);
+        result.setTotalPages((int) Math.ceil((double) totalCount / size));
+        result.setTotalCount(totalCount);
+        return result;
+    }
+
+    // 관리자 고정 방문차량 통계
+    public AdminFixedVisitorVehicleStatsRes getAdminFixedVisitorVehicleStats() {
+        LocalDate today = LocalDate.now();
+
+        AdminFixedVisitorVehicleStatsRes result = new AdminFixedVisitorVehicleStatsRes();
+        result.setTotalCount(fixedVisitorVehicleMapper.countAdminFixedTotal());
+        result.setUnlimitedCount(fixedVisitorVehicleMapper.countAdminFixedUnlimited());
+        result.setMonthCount(fixedVisitorVehicleMapper.countAdminFixedThisMonth(today.getYear(), today.getMonthValue()));
+        result.setActiveCount(fixedVisitorVehicleMapper.countAdminFixedActive(today));
+        return result;
     }
 }
