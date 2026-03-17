@@ -1,7 +1,7 @@
 package com.apt.vehicle.controller;
 
 import com.apt.common.response.ResultResponse;
-import com.apt.common.security.JwtUser;
+import com.apt.common.security.UserPrincipal;
 import com.apt.vehicle.dto.request.VehicleAdminSearchReq;
 import com.apt.vehicle.dto.response.VehicleAdminRes;
 import com.apt.vehicle.dto.response.VehiclePageRes;
@@ -52,8 +52,8 @@ public class AdminVehicleController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<Void>> approveVehicle(
             @PathVariable Long id,
-            @AuthenticationPrincipal JwtUser jwtUser) {
-        vehicleService.approveVehicle(id, jwtUser.getUserId());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        vehicleService.approveVehicle(id, userPrincipal.getUserId());
         return ResponseEntity.ok(ResultResponse.success("차량 승인 완료", null));
     }
 

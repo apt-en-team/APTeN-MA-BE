@@ -17,8 +17,8 @@ public class FacilityController {
 
     private final FacilityService facilityService;
 
-    /** API-044 | 시설 타입 목록 조회 */
-    @GetMapping("/api/admin/facility-types")
+    /** API-044 | 시설 타입 목록 조회 (ALL) */
+    @GetMapping("/api/facility-types")
     public ResponseEntity<ResultResponse<List<FacilityTypeRes>>> getAllTypes() {
         return ResponseEntity.ok(ResultResponse.success("시설 타입 목록 조회 성공",
                 facilityService.getAllTypes()));
@@ -39,4 +39,5 @@ public class FacilityController {
         return ResponseEntity.ok(ResultResponse.success("시설 상세 조회 성공",
                 facilityService.getFacility(id)));
     }
+
 }
