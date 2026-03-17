@@ -33,8 +33,11 @@ public class Vehicle {
     /** 차량 번호판 */
     private String licensePlate;
 
-    /** 차종 */
+    /** 차모델*/
     private String carModel;
+
+    /** 차종**/
+    private String carType;
 
     /** 승인 상태 (PENDING / APPROVED / REJECTED) */
     private String status;

@@ -48,18 +48,29 @@ public class VehicleService {
         vehicle.setHouseholdId(householdId);
         vehicle.setLicensePlate(req.getLicensePlate());
         vehicle.setCarModel(req.getCarModel());
+        vehicle.setCarType(req.getCarType());
         vehicle.setStatus("PENDING");
 
         vehicleMapper.insertVehicle(vehicle);
         return VehicleRes.ofRegister(vehicle);
     }
 
-    /** API-040 | 차량 수정 (car_model 만, 본인 차량 체크) */
+    /** API-040 | 차량 수정 */
     public VehicleRes updateVehicle(Long vehicleId, VehicleUpdateReq req, Long userId) {
         Vehicle vehicle = vehicleMapper.findById(vehicleId);
         if (vehicle == null) throw new CustomException(ErrorCode.VEHICLE_NOT_FOUND);
         if (!vehicle.getUserId().equals(userId)) throw new CustomException(ErrorCode.FORBIDDEN);
 
+        // 번호판 중복 체크 (자기 자신 제외)
+        String cleanPlate   = req.getLicensePlate().replaceAll("\\s", "");;
+        String currentPlate = vehicle.getLicensePlate().replaceAll("\\s", "");
+        if (!cleanPlate.equals(currentPlate)) {
+            if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
+                throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
+            }
+        }
+
+        vehicle.setLicensePlate(req.getLicensePlate());  // ← 추가
         vehicle.setCarModel(req.getCarModel());
         vehicleMapper.updateVehicle(vehicle);
         return VehicleRes.ofUpdate(vehicle);

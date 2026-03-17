@@ -16,6 +16,7 @@
     <select id="findAllTypes" resultType="com.apt.facility.model.FacilityType">
         SELECT type_id, name, description, created_at
         FROM facility_type
+        WHERE deleted_at IS NULL  -- ← 이게 있어야 해요
         ORDER BY created_at DESC
     </select>
 
@@ -59,6 +60,7 @@
         FROM facility f
         LEFT JOIN facility_type t ON f.type_id = t.type_id
         <where>
+            AND f.deleted_at IS NULL  -- ← 이게 있어야 해요
             <if test="typeId != null">AND f.type_id = #{typeId}</if>
         </where>
         ORDER BY f.created_at DESC
