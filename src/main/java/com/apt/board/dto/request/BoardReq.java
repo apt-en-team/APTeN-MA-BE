@@ -12,4 +12,5 @@ public class BoardReq {
     private String category;
     private String title;
     private String content;
+    private String imageUrl; // 이미지 업로드 후 받은 URL (없으면 null)
 }

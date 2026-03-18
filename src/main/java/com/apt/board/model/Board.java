@@ -12,6 +12,7 @@ public class Board {
     private String category;      // NOTICE, FREE, INQUIRY
     private String title;
     private String content;
+    private String imageUrl;      // 이미지 URL (없으면 null)
     private int viewCount;
     private int isDeleted;        // 0: 정상, 1: 삭제
     private LocalDateTime createdAt;
