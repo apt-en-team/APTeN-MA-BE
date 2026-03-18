@@ -33,9 +33,6 @@ public class VehicleRes {
     /** 차종 */
     private String carModel;
 
-    /** 차종 */
-    private String carType;
-
     /** 승인 상태 (PENDING / APPROVED / REJECTED) */
     private String status;
 
@@ -50,7 +47,6 @@ public class VehicleRes {
                 .carModel(v.getCarModel())
                 .status(v.getStatus())
                 .createdAt(v.getCreatedAt())
-                .carType(v.getCarType())
                 .userName(v.getUserName())
                 .build();
     }
@@ -59,7 +55,7 @@ public class VehicleRes {
     public static VehicleRes ofRegister(Vehicle v) {
         return VehicleRes.builder()
                 .vehicleId(v.getVehicleId())
-                .userId(v.getUserId())
+                .userId(v.getUserId())         // Model 필드 직접 접근
                 .licensePlate(v.getLicensePlate())
                 .carModel(v.getCarModel())
                 .status(v.getStatus())

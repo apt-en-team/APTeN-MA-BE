@@ -49,4 +49,7 @@ public class Facility {
     /** 등록 일시 */
     private LocalDateTime createdAt;
 
+    /** 삭제 일시 (소프트 딜리트) */
+    private LocalDateTime deletedAt;
+
 }

@@ -33,10 +33,10 @@ public class Vehicle {
     /** 차량 번호판 */
     private String licensePlate;
 
-    /** 차모델*/
+    /** 차량모델 */
     private String carModel;
 
-    /** 차종**/
+    /** 차종 */
     private String carType;
 
     /** 승인 상태 (PENDING / APPROVED / REJECTED) */
@@ -50,4 +50,7 @@ public class Vehicle {
 
     /** 등록 일시 */
     private LocalDateTime createdAt;
+
+    /** 삭제 일시 (소프트 딜리트) */
+    private LocalDateTime deletedAt;
 }
