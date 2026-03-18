@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.util.List;
 
-/** 시설 서비스 | 시설 및 시설 타입 CRUD 비즈니스 로직 */
+/**
+ * 시설 서비스 | 시설 및 시설 타입 CRUD 비즈니스 로직
+ * 담당자: 손지혜
+ */
 @Service
 @RequiredArgsConstructor
 public class FacilityService {
@@ -29,7 +32,10 @@ public class FacilityService {
                 .toList();
     }
 
-    /** API-045 | 시설 타입 등록 */
+    /**
+     * API-045 | 시설 타입 등록
+     * - 타입명 빈 값 체크 (@Valid 에서 처리)
+     */
     public FacilityTypeRes createType(FacilityTypeReq req) {
         FacilityType type = new FacilityType();
         type.setName(req.getName());
@@ -38,7 +44,10 @@ public class FacilityService {
         return FacilityTypeRes.of(type);
     }
 
-    /** API-046 | 시설 타입 수정 */
+    /**
+     * API-046 | 시설 타입 수정
+     * - 타입 없으면 FACILITY_TYPE_NOT_FOUND (404)
+     */
     public FacilityTypeRes updateType(Long typeId, FacilityTypeReq req) {
         FacilityType type = facilityMapper.findTypeById(typeId);
         if (type == null) throw new CustomException(ErrorCode.FACILITY_TYPE_NOT_FOUND);
@@ -49,7 +58,11 @@ public class FacilityService {
         return FacilityTypeRes.of(type);
     }
 
-    /** API-047 | 시설 타입 삭제 (해당 타입 시설 존재 시 삭제 불가) */
+    /**
+     * API-047 | 시설 타입 삭제
+     * - 타입 없으면 FACILITY_TYPE_NOT_FOUND (404)
+     * - 해당 타입 시설 존재 시 FACILITY_TYPE_HAS_FACILITY (400)
+     */
     public void deleteType(Long typeId) {
         FacilityType type = facilityMapper.findTypeById(typeId);
         if (type == null) throw new CustomException(ErrorCode.FACILITY_TYPE_NOT_FOUND);
@@ -67,14 +80,21 @@ public class FacilityService {
                 .toList();
     }
 
-    /** API-049 | 시설 상세 조회 */
+    /**
+     * API-049 | 시설 상세 조회
+     * - 시설 없으면 FACILITY_NOT_FOUND (404)
+     */
     public FacilityRes getFacility(Long facilityId) {
         Facility facility = facilityMapper.findById(facilityId);
         if (facility == null) throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
         return FacilityRes.of(facility);
     }
 
-    /** API-050 | 시설 등록 */
+    /**
+     * API-050 | 시설 등록
+     * - 시설 타입 없으면 FACILITY_TYPE_NOT_FOUND (404)
+     * - 필수값 누락/운영시간 오류는 @Valid 에서 처리 → 400
+     */
     public FacilityRes createFacility(FacilityReq req) {
         if (facilityMapper.findTypeById(req.getTypeId()) == null) {
             throw new CustomException(ErrorCode.FACILITY_TYPE_NOT_FOUND);
@@ -85,6 +105,7 @@ public class FacilityService {
         facility.setName(req.getName());
         facility.setDescription(req.getDescription());
         facility.setMaxCapacity(req.getMaxCapacity());
+        facility.setPrice(req.getPrice());
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
@@ -94,7 +115,10 @@ public class FacilityService {
         return FacilityRes.of(facility);
     }
 
-    /** API-051 | 시설 수정 */
+    /**
+     * API-051 | 시설 수정
+     * - 시설 없으면 FACILITY_NOT_FOUND (404)
+     */
     public FacilityRes updateFacility(Long facilityId, FacilityReq req) {
         Facility facility = facilityMapper.findById(facilityId);
         if (facility == null) throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
@@ -103,6 +127,7 @@ public class FacilityService {
         facility.setName(req.getName());
         facility.setDescription(req.getDescription());
         facility.setMaxCapacity(req.getMaxCapacity());
+        facility.setPrice(req.getPrice());
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
@@ -112,7 +137,11 @@ public class FacilityService {
         return FacilityRes.of(facility);
     }
 
-    /** API-052 | 시설 삭제 (예약 존재 시 삭제 불가) */
+    /**
+     * API-052 | 시설 삭제
+     * - 시설 없으면 FACILITY_NOT_FOUND (404)
+     * - 예약 존재 시 FACILITY_HAS_RESERVATION (400)
+     */
     public void deleteFacility(Long facilityId) {
         Facility facility = facilityMapper.findById(facilityId);
         if (facility == null) throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);

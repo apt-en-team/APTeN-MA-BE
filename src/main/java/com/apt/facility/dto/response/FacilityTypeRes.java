@@ -1,38 +1,38 @@
 package com.apt.facility.dto.response;
 
-
 import com.apt.facility.model.FacilityType;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/** 시설 타입 응답 DTO | API-044, 045, 046 */
+/**
+ * 시설 타입 응답 DTO | API-044, 045, 046
+ * 담당자: 손지혜
+ */
 @Getter
-@Setter
-@NoArgsConstructor
-
+@Builder
 public class FacilityTypeRes {
 
-    // 타입 ID
-    private long typeId;
+    /** 시설 타입 ID */
+    private Long typeId;
 
-    // 타입 명
+    /** 타입명 */
     private String name;
 
-    // 타입 설명
+    /** 타입 설명 */
     private String description;
 
-    // 등록 일시
+    /** 등록 일시 */
     private LocalDateTime createdAt;
 
+    /** FacilityType → FacilityTypeRes 변환 */
     public static FacilityTypeRes of(FacilityType t) {
-        FacilityTypeRes res = new FacilityTypeRes();
-        res.typeId      = t.getTypeId();
-        res.name        = t.getName();
-        res.description = t.getDescription();
-        res.createdAt   = t.getCreatedAt();
-        return res;
+        return FacilityTypeRes.builder()
+                .typeId(t.getTypeId())
+                .name(t.getName())
+                .description(t.getDescription())
+                .createdAt(t.getCreatedAt())
+                .build();
     }
 }

@@ -65,7 +65,4 @@ public interface FacilityMapper {
     /** 해당 시설 예약 존재 여부 (삭제 시 체크) | API-052 */
     int countReservationsByFacilityId(Long facilityId);
 
-
-
-
 }

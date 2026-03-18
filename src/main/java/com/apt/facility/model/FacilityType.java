@@ -6,17 +6,19 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/** 시설 타입 엔티티 | facility_type 테이블 매핑 */
+/**
+ * 시설 타입 엔티티 | facility_type 테이블 매핑
+ * 담당자: 손지혜
+ */
 @Getter
 @Setter
 @NoArgsConstructor
-
 public class FacilityType {
 
-    /** 타입 ID (PK) */
+    /** 시설 타입 ID (PK) */
     private Long typeId;
 
-    /** 타입명 (헬스장, 골프장 등) */
+    /** 타입명 (헬스장, 골프장, 독서실, GX 등) */
     private String name;
 
     /** 타입 설명 */
