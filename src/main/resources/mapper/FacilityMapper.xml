@@ -53,16 +53,16 @@
     <select id="findAll" resultType="com.apt.facility.model.Facility">
         SELECT
         f.facility_id, f.type_id, t.name AS type_name,
-        f.name, f.description, f.max_capacity, f.price,
+        f.name, f.description, f.max_capacity,
         f.open_time, f.close_time, f.slot_duration,
-        f.is_active AS active, f.created_at
+        f.is_active AS active, f.created_at, f.updated_at
         FROM facility f
         LEFT JOIN facility_type t ON f.type_id = t.type_id
         <where>
-            AND f.deleted_at IS NULL
+            f.deleted_at IS NULL
             <if test="typeId != null">AND f.type_id = #{typeId}</if>
         </where>
-        ORDER BY f.facility_id ASC
+        ORDER BY f.facility_id DESC  -- ← ASC → DESC 변경
     </select>
 
     <!-- 시설 단건 조회 | API-049 -->
