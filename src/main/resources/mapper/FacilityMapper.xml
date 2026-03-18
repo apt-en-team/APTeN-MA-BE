@@ -6,10 +6,16 @@
 
     <!-- 공통 컬럼 재사용 -->
     <sql id="facilityColumns">
-        f.facility_id, f.type_id, f.name, f.description,
-        f.max_capacity, f.open_time, f.close_time,
-        f.slot_duration, f.is_active, f.created_at,
-        t.name AS type_name
+        facility_id   AS facilityId,
+        type_id       AS typeId,
+        name,
+        description,
+        max_capacity  AS maxCapacity,
+        open_time     AS openTime,
+        close_time    AS closeTime,
+        slot_duration AS slotDuration,
+        is_active     AS isActive,
+        created_at    AS createdAt
     </sql>
 
     <!-- 시설 타입 전체 조회 | API-044 -->

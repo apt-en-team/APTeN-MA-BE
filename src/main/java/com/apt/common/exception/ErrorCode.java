@@ -38,6 +38,9 @@ public enum ErrorCode {
     VISITOR_VEHICLE_NOT_FOUND(404, "방문차량을 찾을 수 없습니다"),
     // 방문 예정일로 과거 날짜 선택 불가
     PAST_VISIT_DATE(400, "과거 날짜는 선택할 수 없습니다"),
+    VISITOR_VEHICLE_NOT_APPROVED(400, "승인된 차량만 등록 취소할 수 있습니다"),
+    // 고정 방문 차량 날짜 선택
+    INVALID_DATE_RANGE(400,"종료일이 시작일보다 앞설 수 없습니다"),
 
     // ── 차량 관련 ─────────────────────────────────────────────────
     VEHICLE_NOT_FOUND(404, "차량을 찾을 수 없습니다"),
@@ -56,6 +59,7 @@ public enum ErrorCode {
     // ── 예약 관련 ─────────────────────────────────────────────────
     // 동일 시설+날짜+시간+좌석 중복 예약 방지 (NFR-007)
     DUPLICATE_RESERVATION(409, "이미 예약된 시간입니다"),
+    INVALID_DATE(409, "예약할 수 없는 날짜입니다"),
     // 헬스장/GX: max_capacity 초과 방지 (FR-044)
     RESERVATION_FULL(400, "정원이 초과되었습니다"),
     RESERVATION_NOT_FOUND(404, "예약을 찾을 수 없습니다"),
@@ -63,6 +67,8 @@ public enum ErrorCode {
     CANCEL_TIME_EXPIRED(400, "예약 1시간 전까지만 취소 가능합니다"),
     // GX 예약 승인이 이미 처리된 경우
     GX_ALREADY_PROCESSED(400, "이미 처리된 강의입니다"),
+    // [추가] 취소(삭제)할 예약이 존재하지 않는 경우
+    NOT_FOUND_TO_CANCEL(404, "취소할 예약 정보를 찾을 수 없습니다"),
 
     // ── 서버 오류 ─────────────────────────────────────────────────
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다");
