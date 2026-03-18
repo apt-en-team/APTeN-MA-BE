@@ -18,7 +18,11 @@ public class VehicleUpdateReq {
     @Size(max = 20)
     private String licensePlate;
 
-    /** 차종 */
+    /** 차 모델 */
     @Size(max = 50, message = "차종은 50자 이내여야 합니다.")
     private String carModel;
+
+    /** 차종 */
+    @Size(max = 20)
+    private String carType;
 }

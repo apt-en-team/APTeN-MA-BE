@@ -32,16 +32,20 @@ public class VehicleService {
                 .toList();
     }
 
-    /** API-039 | 차량 등록 (세대당 2대 제한, 번호판 중복 체크) */
+    /** API-039 | 차량 등록 */
     public VehicleRes registerVehicle(VehicleReq req, Long userId) {
-        Long householdId = vehicleMapper.findHouseholdIdByUserId(userId);
+        if (req.getLicensePlate() == null || req.getLicensePlate().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_LICENSE_PLATE_REQUIRED);
+        if (req.getCarModel() == null || req.getCarModel().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_MODEL_REQUIRED);
+        if (req.getCarType() == null || req.getCarType().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_TYPE_REQUIRED);
 
-        if (vehicleMapper.countByHouseholdId(householdId) >= 2) {
+        Long householdId = vehicleMapper.findHouseholdIdByUserId(userId);
+        if (vehicleMapper.countByHouseholdId(householdId) >= 2)
             throw new CustomException(ErrorCode.VEHICLE_LIMIT_EXCEEDED);
-        }
-        if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
+        if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0)
             throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
-        }
 
         Vehicle vehicle = new Vehicle();
         vehicle.setUserId(userId);
@@ -57,21 +61,27 @@ public class VehicleService {
 
     /** API-040 | 차량 수정 */
     public VehicleRes updateVehicle(Long vehicleId, VehicleUpdateReq req, Long userId) {
+        if (req.getLicensePlate() == null || req.getLicensePlate().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_LICENSE_PLATE_REQUIRED);
+        if (req.getCarModel() == null || req.getCarModel().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_MODEL_REQUIRED);
+        if (req.getCarType() == null || req.getCarType().isBlank())
+            throw new CustomException(ErrorCode.VEHICLE_TYPE_REQUIRED);
+
         Vehicle vehicle = vehicleMapper.findById(vehicleId);
         if (vehicle == null) throw new CustomException(ErrorCode.VEHICLE_NOT_FOUND);
         if (!vehicle.getUserId().equals(userId)) throw new CustomException(ErrorCode.FORBIDDEN);
 
-        // 번호판 중복 체크 (자기 자신 제외)
-        String cleanPlate   = req.getLicensePlate().replaceAll("\\s", "");;
+        String cleanPlate   = req.getLicensePlate().replaceAll("\\s", "");
         String currentPlate = vehicle.getLicensePlate().replaceAll("\\s", "");
         if (!cleanPlate.equals(currentPlate)) {
-            if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
+            if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0)
                 throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
-            }
         }
 
-        vehicle.setLicensePlate(req.getLicensePlate());  // ← 추가
+        vehicle.setLicensePlate(req.getLicensePlate());
         vehicle.setCarModel(req.getCarModel());
+        vehicle.setCarType(req.getCarType());
         vehicleMapper.updateVehicle(vehicle);
         return VehicleRes.ofUpdate(vehicle);
     }

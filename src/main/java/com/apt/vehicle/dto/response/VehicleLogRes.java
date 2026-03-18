@@ -13,10 +13,13 @@ public class VehicleLogRes {
     /** 기록 ID */
     private Long logId;
 
+    /** 차량 ID */
+    private Long vehicleId;  // ← 추가
+
     /** 차량 번호판 */
     private String licensePlate;
 
-    /** 입출차 구분 (ENTRY: 입차 / EXIT: 출차) */
+    /** 입출차 구분 (IN: 입차 / OUT: 출차) */
     private String entryType;
 
     /** 기록 일시 */
