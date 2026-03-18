@@ -1,5 +1,6 @@
 package com.apt.facility.mapper;
 
+import com.apt.facility.dto.response.FacilityListRes;
 import com.apt.facility.model.Facility;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -30,5 +31,8 @@ public interface FacilityMapper {
      * @return is_active = 1 인 시설 리스트
      */
     List<Facility> findAllActive();
+
+    //예약현황 페이지 리스트
+    List<FacilityListRes> getFacilityList();
 
 }

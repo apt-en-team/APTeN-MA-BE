@@ -2,14 +2,14 @@ package com.apt.reservation.service;
 
 import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
+import com.apt.facility.dto.response.FacilityListRes;
 import com.apt.facility.mapper.FacilityMapper;
 import com.apt.facility.model.Facility;
+import com.apt.household.dto.response.PageRes;
+import com.apt.reservation.dto.request.ReservationCalendarReq;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
-import com.apt.reservation.dto.response.AvailableSlotRes;
-import com.apt.reservation.dto.response.GxApprovalRes;
-import com.apt.reservation.dto.response.ReservationListRes;
-import com.apt.reservation.dto.response.ReservationRes;
+import com.apt.reservation.dto.response.*;
 import com.apt.reservation.mapper.ReservationMapper;
 import com.apt.reservation.model.GxProgram;
 import lombok.RequiredArgsConstructor;
@@ -148,7 +148,7 @@ public class ReservationService {
 
         //1시간 전 예약 취소 방지
         if(reservation.getReservationDate().equals(LocalDate.now()) &&
-                reservation.getStartTime().isBefore(LocalTime.now().plusHours(1))){
+                reservation.getStartTime().isBefore(LocalTime.now().plusHours(1)) || reservation.getReservationDate().isBefore(LocalDate.now()) ){
             throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
         }
 
@@ -156,8 +156,15 @@ public class ReservationService {
     }
 
     //관리자 전체 예약 조회
-    public List<ReservationListRes> getAdminReservationList(ReservationGetReq req){
+    public List<ReservationListRes> getAdminReservationList(ReservationGetReq req) {
         return reservationMapper.findAllByAdmin(req);
+    }
+
+    // 페이지 정보 별도 반환
+    public PageRes getAdminReservationPageInfo(ReservationGetReq req) {
+        int totalCount = reservationMapper.countAllByAdmin(req);
+        int maxPage    = (int) Math.ceil((double) totalCount / req.getSize());
+        return new PageRes(maxPage, totalCount);  // HouseholdMapper에서 쓰던 PageRes 재사용
     }
 
     //관리자 예약 상세
@@ -170,6 +177,11 @@ public class ReservationService {
     public void forceCancel(long reservationId){
         //상태 확인
         ReservationRes reservation = getReservation(reservationId);
+
+        //이후 날짜 확인
+        if(reservation.getReservationDate().isBefore(LocalDate.now()) ){
+            throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
+        }
         reservationMapper.cancelReservation(reservationId);
     }
 
@@ -221,6 +233,25 @@ public class ReservationService {
         res.setCancelledCount(cancelledCount);
 
         return res;
+    }
+
+    //gx대기 카운트
+    public GxPendingCount pendingGx(){
+        return reservationMapper.pendingGx();
+    }
+    //관리자 통계카드
+    public TodayStatsRes TodayStats(){
+        return reservationMapper.TodayStats();
+    }
+
+    //관리자 예약현황 리스트
+    public List<FacilityListRes> getFacilityList(){
+        return facilityMapper.getFacilityList();
+    }
+
+    //관리자 캘린더페이지 조회
+    public List<ReservationRes> getReservationsByFacility(ReservationCalendarReq req){
+        return reservationMapper.getReservationsByFacility(req);
     }
 
 }

@@ -9,4 +9,9 @@ import lombok.Setter;
 public class PageRes {
     private int maxPage;
     private int totalCount;
+
+    public PageRes(int maxPage, int totalCount){
+        this.maxPage = maxPage;
+        this.totalCount = totalCount;
+    }
 }

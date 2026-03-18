@@ -76,7 +76,7 @@
             r.end_time,
             r.seat_no,
             r.status,
-            r.created_at
+            r.created_at,
             (SELECT COUNT(*)
              FROM reservation r2
              WHERE r2.facility_id      = r.facility_id
@@ -87,10 +87,49 @@
              FROM reservation r2
              WHERE r2.program_id = r.program_id
                AND r2.status     = 'PENDING'
-               AND r.program_id IS NOT NULL) AS pendingCount
+               AND r.program_id IS NOT NULL) AS pendingCount,
+            gx.start_date,
+            gx.end_date,
+            gx.program_id,
+            u.name as userName,
+            h.dong,
+            h.ho,
+            r.approved_at,
+            r.cancelled_at,
+            f.max_capacity
         FROM reservation r
                  JOIN facility f ON f.facility_id = r.facility_id
+                 LEFT JOIN gx_program gx ON gx.program_id = r.program_id
+                 LEFT JOIN user u ON u.user_id = r.user_id
+                 LEFT JOIN household h ON u.household_id = h.household_id
+
         WHERE r.reservation_id = #{reservationId}
+    </select>
+
+    <!-- 전체 건수 조회 (페이지네이션용) -->
+    <select id="countAllByAdmin" resultType="int">
+        SELECT COUNT(*)
+        FROM reservation r
+        JOIN facility f ON r.facility_id = f.facility_id
+        JOIN user u ON r.user_id = u.user_id
+        LEFT JOIN household h ON h.household_id = u.household_id
+        <where>
+            <if test="status != null and status != ''">
+                AND r.status = #{status}
+            </if>
+            <if test="facilityName != null and facilityName != ''">
+                AND f.name LIKE CONCAT('%', #{facilityName}, '%')
+            </if>
+            <if test="facilityId != null">
+                AND r.facility_id = #{facilityId}
+            </if>
+            <if test="reservationDate != null">
+                AND r.reservation_date = #{reservationDate}
+            </if>
+            <if test="userName != null and userName != ''">
+                AND u.name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+        </where>
     </select>
 
     <!-- 내 예약 조회 - 이용예정/지난내역/시설이름 필터 -->
@@ -170,6 +209,15 @@
             <if test="facilityName != null and facilityName != ''">
                 AND f.name LIKE CONCAT('%', #{facilityName}, '%')
             </if>
+            <if test="facilityId != null">
+                AND r.facility_id = #{facilityId}
+            </if>
+            <if test="reservationDate != null">
+                AND r.reservation_date = #{reservationDate}
+            </if>
+            <if test="userName != null and userName != ''">
+                AND u.name LIKE CONCAT('%', #{userName}, '%')
+            </if>
         </where>
         ORDER BY r.reservation_date DESC, r.start_time DESC
         LIMIT #{startIdx}, #{size}
@@ -221,6 +269,52 @@
             updated_at = NOW()
         WHERE program_id = #{programId}
     </update>
+
+    <select id="pendingGx" resultType="com.apt.reservation.dto.response.GxPendingCount">
+        SELECT count(*) AS pendingCount
+        FROM reservation
+        WHERE status = 'PENDING'
+    </select>
+
+    <select id="TodayStats" resultType="com.apt.reservation.dto.response.TodayStatsRes">
+        SELECT
+        COUNT(CASE WHEN reservation_date = CURDATE() THEN 1 END) AS todayTotal,
+        COUNT(CASE WHEN reservation_date = CURDATE()
+                    AND NOW() BETWEEN start_time AND end_time
+                    AND status = 'CONFIRMED'
+                    THEN 1 END) AS todayConfirmed,
+        COUNT(CASE WHEN reservation_date = CURDATE()
+                    AND status = 'CANCELLED'
+                    THEN 1 END) AS todayCancelled,
+        COUNT(CASE
+                  WHEN reservation_date = CURDATE()
+                      AND status = 'PENDING'
+                      THEN 1 END) AS todayPending,
+        COUNT(CASE WHEN DATE_FORMAT(reservation_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+                          THEN 1 END) AS monthTotal,
+        COUNT(*) AS totalCount
+        FROM reservation
+    </select>
+
+
+    <!-- 관리자 달력페이지 조회 -->
+    <select id="getReservationsByFacility">
+        SELECT r.reservation_id, f.facility_id, f.name as facilityName, ft.type_id, ft.name as typeName, r.reservation_date,
+               r.start_time, r.end_time, r.seat_no, r.status, u.name as userName, h.dong, h.ho, gx.program_id, f.max_capacity
+        FROM reservation r
+                 LEFT JOIN facility f
+                           ON r.facility_id = f.facility_id
+                 LEFT JOIN facility_type ft
+                           ON f.type_id = ft.type_id
+                 LEFT JOIN gx_program gx
+                           ON r.program_id = gx.program_id
+                 LEFT JOIN user u
+                           ON r.user_id = u.user_id
+                 LEFT JOIN household h
+                           ON u.household_id = h.household_id
+        WHERE ft.type_id = #{typeId}
+          AND r.reservation_date between #{startDate} and #{endDate};
+    </select>
 
 
 </mapper>
