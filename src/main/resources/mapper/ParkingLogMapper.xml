@@ -133,24 +133,20 @@
 
     <!-- API-036 | 입출차 통계 조회 -->
     <select id="getParkingLogStats" resultType="com.apt.parking.dto.response.ParkingLogStatsRes">
-        SELECT
-        SUM(CASE WHEN entry_type = 'IN' THEN 1 ELSE 0 END) AS today_in,
-        SUM(CASE WHEN entry_type = 'OUT' THEN 1 ELSE 0 END) AS today_out,
-        SUM(CASE
-        WHEN vehicle_id IS NULL
-        AND visitor_vehicle_id IS NULL
-        AND fixed_visitor_vehicle_id IS NULL
-        THEN 1 ELSE 0
-        END) AS unregistered,
-        COUNT(*) AS month_total
+        SELECT SUM(CASE WHEN entry_type = 'IN' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0 END)            AS today_in,
+               SUM(CASE WHEN entry_type = 'OUT' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0
+                   END)                                                                                       AS today_out,
+               SUM(CASE
+                       WHEN vehicle_id IS NULL
+                           AND visitor_vehicle_id IS NULL
+                           AND fixed_visitor_vehicle_id IS NULL
+                           AND DATE (logged_at) = CURDATE()
+                   THEN 1 ELSE 0
+                   END)                                                                                       AS unregistered,
+               SUM(CASE
+                       WHEN DATE_FORMAT(logged_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m') THEN 1
+                       ELSE 0 END)                                                                            AS month_total
         FROM parking_log
-        WHERE 1=1
-        <if test="startDate != null">
-            AND DATE(logged_at) >= #{startDate}
-        </if>
-        <if test="endDate != null">
-            AND DATE(logged_at) &lt;= #{endDate}
-        </if>
     </select>
 
 </mapper>
