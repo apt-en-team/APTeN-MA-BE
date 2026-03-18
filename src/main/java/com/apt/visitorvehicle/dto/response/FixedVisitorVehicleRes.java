@@ -22,4 +22,5 @@ public class FixedVisitorVehicleRes {
     private String userName;
     private String dong;
     private String ho;
+    private int isDeleted;
 }

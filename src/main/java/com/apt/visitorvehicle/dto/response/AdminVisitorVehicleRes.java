@@ -18,5 +18,6 @@ public class AdminVisitorVehicleRes {
     private String dong; // 동 (user JOIN)
     private String ho; // 호 (user JOIN)
     private boolean isEntered; // 입차 여부 (추후 parking_log 연동)
+    private int isDeleted;
 }
 

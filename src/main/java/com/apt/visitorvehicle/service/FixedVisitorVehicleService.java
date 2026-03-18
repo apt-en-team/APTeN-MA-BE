@@ -105,4 +105,11 @@ public class FixedVisitorVehicleService {
         result.setActiveCount(fixedVisitorVehicleMapper.countAdminFixedActive(today));
         return result;
     }
+
+    // 관리자 고정 방문차량 삭제 (소유권 체크 없음)
+    public void adminDeleteFixedVisitorVehicle(Long fixedId) {
+        FixedVisitorVehicle v = fixedVisitorVehicleMapper.findFixedById(fixedId);
+        if (v == null) throw new CustomException(ErrorCode.VISITOR_VEHICLE_NOT_FOUND);
+        fixedVisitorVehicleMapper.deleteFixedVisitorVehicle(fixedId);
+    }
 }
