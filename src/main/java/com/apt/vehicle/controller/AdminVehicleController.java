@@ -2,10 +2,12 @@ package com.apt.vehicle.controller;
 
 import com.apt.common.response.ResultResponse;
 import com.apt.common.security.UserPrincipal;
+import com.apt.vehicle.dto.request.VehicleAdminRegisterReq;
 import com.apt.vehicle.dto.request.VehicleAdminSearchReq;
 import com.apt.vehicle.dto.response.VehicleAdminRes;
 import com.apt.vehicle.dto.response.VehiclePageRes;
 import com.apt.vehicle.service.VehicleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,6 +41,15 @@ public class AdminVehicleController {
                 vehicleService.getVehicleStats()));
     }
 
+    /** ADMIN | 차량 등록 */
+    @PostMapping("/api/admin/vehicles")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<?>> adminRegisterVehicle(
+            @RequestBody @Valid VehicleAdminRegisterReq req) {
+        return ResponseEntity.ok(ResultResponse.success("차량 등록 성공",
+                vehicleService.adminRegisterVehicle(req)));
+    }
+
     /** ADMIN | 동 목록 조회 */
     @GetMapping("/api/admin/vehicles/dongs")
     @PreAuthorize("hasRole('ADMIN')")
@@ -64,5 +75,14 @@ public class AdminVehicleController {
             @PathVariable Long id) {
         vehicleService.rejectVehicle(id);
         return ResponseEntity.ok(ResultResponse.success("차량 거부 완료", null));
+    }
+
+    /** ADMIN | 차량번호 중복 확인 */
+    @GetMapping("/api/admin/vehicles/check-plate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResultResponse<Boolean>> checkLicensePlate(
+            @RequestParam String licensePlate) {
+        boolean isDuplicate = vehicleService.existsByLicensePlate(licensePlate);
+        return ResponseEntity.ok(ResultResponse.success("중복 확인 완료", isDuplicate));
     }
 }

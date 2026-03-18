@@ -2,6 +2,7 @@ package com.apt.vehicle.service;
 
 import com.apt.common.exception.CustomException;
 import com.apt.common.exception.ErrorCode;
+import com.apt.vehicle.dto.request.VehicleAdminRegisterReq;
 import com.apt.vehicle.dto.request.VehicleAdminSearchReq;
 import com.apt.vehicle.dto.request.VehicleReq;
 import com.apt.vehicle.dto.request.VehicleUpdateReq;
@@ -69,18 +70,6 @@ public class VehicleService {
 
         return VehicleRes.ofRegister(vehicle);
     }
-
-//    /** API-040 | 차량 수정 (car_model 만, 본인 차량 체크) */
-//    @Transactional
-//    public VehicleRes updateVehicle(Long vehicleId, VehicleUpdateReq req, Long userId) {
-//        Vehicle vehicle = vehicleMapper.findById(vehicleId);
-//        if (vehicle == null) throw new CustomException(ErrorCode.VEHICLE_NOT_FOUND);
-//        if (!vehicle.getUserId().equals(userId)) throw new CustomException(ErrorCode.FORBIDDEN);
-//
-//        vehicle.setCarModel(req.getCarModel());
-//        vehicleMapper.updateVehicle(vehicle);
-//        return VehicleRes.ofUpdate(vehicle);
-//    }
 
     /** API-040 | 차량 수정 */
     @Transactional
@@ -171,8 +160,38 @@ public class VehicleService {
         vehicleMapper.rejectVehicle(vehicleId);
     }
 
+    /** 차량번호 중복 확인 */
+    public boolean existsByLicensePlate(String licensePlate) {
+        return vehicleMapper.existsByLicensePlate(licensePlate) > 0;
+    }
+
     /** ADMIN | 동 목록 조회 */
     public List<String> getDongs() {
         return vehicleMapper.findDistinctDongs();
+    }
+
+    /** ADMIN | 차량 등록 */
+    @Transactional
+    public VehicleRes adminRegisterVehicle(VehicleAdminRegisterReq req) {
+        Long householdId = vehicleMapper.findHouseholdIdByUserId(req.getUserId());
+        if (householdId == null) throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
+
+        if (vehicleMapper.countByHouseholdId(householdId) >= 2) {
+            throw new CustomException(ErrorCode.VEHICLE_LIMIT_EXCEEDED);
+        }
+        if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
+            throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
+        }
+
+        Vehicle vehicle = new Vehicle();
+        vehicle.setUserId(req.getUserId());
+        vehicle.setHouseholdId(householdId);
+        vehicle.setLicensePlate(req.getLicensePlate());
+        vehicle.setCarModel(req.getCarModel());
+        vehicle.setCarType(req.getCarType());
+        vehicle.setStatus(req.getStatus());
+
+        vehicleMapper.insertVehicle(vehicle);
+        return VehicleRes.ofRegister(vehicle);
     }
 }

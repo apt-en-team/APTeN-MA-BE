@@ -113,7 +113,7 @@
     <!-- 차량 등록 | API-039 -->
     <insert id="insertVehicle" useGeneratedKeys="true" keyProperty="vehicleId">
         INSERT INTO vehicle (user_id, household_id, license_plate, car_model, car_type, status, created_at)
-        VALUES (#{userId}, #{householdId}, #{licensePlate}, #{carModel}, #{carType}, 'PENDING', NOW())
+        VALUES (#{userId}, #{householdId}, #{licensePlate}, #{carModel}, #{carType}, #{status}, NOW())
     </insert>
 
     <!-- 차량 수정 (licensePlate, carModel) | API-040 -->
