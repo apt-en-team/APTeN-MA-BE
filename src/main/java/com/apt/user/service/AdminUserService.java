@@ -15,7 +15,7 @@ public class AdminUserService {
 
     private final AdminUserMapper adminUserMapper;
 
-    // ── 회원 승인 ─────────────────────────────────────────────────
+    // 회원 승인
     // 1. 유저 조회 (없으면 404)
     // 2. user.status → APPROVED
     // 3. household_id 있으면 household_history '입주' 이력 등록
@@ -36,7 +36,7 @@ public class AdminUserService {
         }
     }
 
-    // ── 회원 거부 ─────────────────────────────────────────────────
+    // 회원 거부
     // user.status → REJECTED
     @Transactional
     public void rejectUser(Long userId) {

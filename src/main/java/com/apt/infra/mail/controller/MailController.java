@@ -1,9 +1,9 @@
-package com.apt.mail.controller;
+package com.apt.infra.mail.controller;
 
 import com.apt.common.response.ResultResponse;
-import com.apt.mail.dto.request.PasswordResetReq;
-import com.apt.mail.dto.request.ResetPasswordReq;
-import com.apt.mail.service.MailService;
+import com.apt.infra.mail.dto.request.PasswordResetReq;
+import com.apt.infra.mail.dto.request.ResetPasswordReq;
+import com.apt.infra.mail.service.MailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
