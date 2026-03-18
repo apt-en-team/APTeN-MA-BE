@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminFixedVisitorVehicleController {
     private final FixedVisitorVehicleService fixedVisitorVehicleService;
 
-    // API-071 | 관리자 전체 고정 방문차량 목록 조회
+    // 관리자 전체 고정 방문차량 목록 조회
     @GetMapping
     public ResultResponse<?> getAdminFixedVisitorVehicles(
             @RequestParam(required = false) String vehicleNumber,
@@ -22,10 +22,18 @@ public class AdminFixedVisitorVehicleController {
                 fixedVisitorVehicleService.getAdminFixedVisitorVehicles(vehicleNumber, dong, page, size));
     }
 
-    // API-072 | 관리자 고정 방문차량 통계
+    // 관리자 고정 방문차량 통계
     @GetMapping("/stats")
     public ResultResponse<?> getAdminFixedVisitorVehicleStats() {
         return ResultResponse.success("조회 성공",
                 fixedVisitorVehicleService.getAdminFixedVisitorVehicleStats());
+    }
+
+    // 관리자 고정 방문차량 삭제
+    @DeleteMapping("/{fixedId}")
+    public ResultResponse<?> deleteAdminFixedVisitorVehicle(
+            @PathVariable Long fixedId) {
+        fixedVisitorVehicleService.adminDeleteFixedVisitorVehicle(fixedId);
+        return ResultResponse.success("삭제 성공", null);
     }
 }
