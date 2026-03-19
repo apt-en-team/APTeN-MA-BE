@@ -7,15 +7,15 @@
     <!-- 공통 컬럼 재사용 -->
     <sql id="facilityColumns">
         f.facility_id AS facilityId,
-    f.type_id AS typeId,
-    f.name,
-    f.description,
-    f.max_capacity AS maxCapacity,
-    f.open_time AS openTime,
-    f.close_time AS closeTime,
-    f.slot_duration AS slotDuration,
-    f.is_active AS isActive,
-    f.created_at AS createdAt
+        f.type_id AS typeId,
+        f.name,
+        f.description,
+        f.max_capacity AS maxCapacity,
+        f.open_time AS openTime,
+        f.close_time AS closeTime,
+        f.slot_duration AS slotDuration,
+        f.is_active AS isActive,
+        f.created_at AS createdAt
     </sql>
 
     <!-- 시설 타입 전체 조회 | API-044 -->
@@ -23,7 +23,7 @@
         SELECT type_id, name, description, created_at
         FROM facility_type
         WHERE deleted_at IS NULL
-        ORDER BY created_at DESC
+        ORDER BY type_id ASC
     </select>
 
     <!-- 시설 타입 단건 조회 -->
@@ -69,8 +69,8 @@
         FROM facility f
         LEFT JOIN facility_type t ON f.type_id = t.type_id
         <where>
-            AND f.deleted_at IS NULL
-            <if test="typeId != null">AND f.type_id = #{typeId}</if>
+            f.deleted_at IS NULL
+            <if test="_parameter != null">AND f.type_id = #{_parameter}</if>
         </where>
         ORDER BY f.created_at DESC
     </select>
