@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.vehicle.mapper.VehicleMapper">
+
+    <!-- 내 차량 목록 조회 | API-038 -->
+    <select id="findByUserId" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT
+            v.vehicle_id, v.user_id, v.household_id,
+            v.license_plate, v.car_model, v.car_type,
+            v.status, v.approved_by, v.approved_at, v.created_at,
+            u.name AS user_name
+        FROM vehicle v
+                 LEFT JOIN user u ON v.user_id = u.user_id
+        WHERE v.user_id = #{userId}
+          AND v.deleted_at IS NULL
+        ORDER BY v.created_at DESC
+    </select>
+
+    <!-- 차량 단건 조회 | API-040, 041 -->
+    <select id="findById" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT
+            v.vehicle_id, v.user_id, v.household_id,
+            v.license_plate, v.car_model, v.car_type,
+            v.status, v.approved_by, v.approved_at, v.created_at,
+            h.dong, h.ho,
+            u.name AS user_name
+        FROM vehicle v
+                 LEFT JOIN household h ON v.household_id = h.household_id
+                 LEFT JOIN user u      ON v.user_id = u.user_id
+        WHERE v.vehicle_id = #{vehicleId}
+          AND v.deleted_at IS NULL
+    </select>
+
+    <!-- 전체 차량 목록 조회 (필터 + 페이징) | API-042 -->
+    <select id="findAll" resultType="com.apt.vehicle.model.Vehicle">
+        SELECT
+        v.vehicle_id, v.user_id, v.household_id,
+        v.license_plate, v.car_model, v.car_type,
+        v.status, v.approved_by, v.approved_at, v.created_at,
+        h.dong, h.ho,
+        u.name AS user_name
+        FROM vehicle v
+        LEFT JOIN household h ON v.household_id = h.household_id
+        LEFT JOIN user u      ON v.user_id = u.user_id
+        <where>
+            AND v.deleted_at IS NULL
+            <if test="req.householdId != null">AND v.household_id = #{req.householdId}</if>
+            <if test="req.status != null and req.status != ''">AND v.status = #{req.status}</if>
+            <if test="req.carType != null and req.carType != ''">AND v.car_type = #{req.carType}</if>
+            <if test="req.dong != null and req.dong != ''">AND h.dong = #{req.dong}</if>
+            <if test="req.search != null and req.search != ''">
+                AND (v.license_plate LIKE CONCAT('%', #{req.search}, '%')
+                OR v.car_model     LIKE CONCAT('%', #{req.search}, '%')
+                OR h.dong          LIKE CONCAT('%', #{req.search}, '%'))
+            </if>
+        </where>
+        ORDER BY v.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 전체 차량 수 조회 (필터) | API-042 페이징용 -->
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM vehicle v
+        LEFT JOIN household h ON v.household_id = h.household_id
+        <where>
+            AND v.deleted_at IS NULL
+            <if test="householdId != null">AND v.household_id = #{householdId}</if>
+            <if test="status != null and status != ''">AND v.status = #{status}</if>
+            <if test="carType != null and carType != ''">AND v.car_type = #{carType}</if>
+            <if test="dong != null and dong != ''">AND h.dong = #{dong}</if>
+            <if test="search != null and search != ''">
+                AND (v.license_plate LIKE CONCAT('%', #{search}, '%')
+                OR v.car_model     LIKE CONCAT('%', #{search}, '%')
+                OR h.dong          LIKE CONCAT('%', #{search}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 동 목록 조회 (필터용) | ADMIN -->
+    <select id="findDistinctDongs" resultType="string">
+        SELECT DISTINCT dong
+        FROM household
+        WHERE dong IS NOT NULL
+        ORDER BY dong
+    </select>
+
+    <!-- 세대 차량 수 조회 (2대 제한 체크) | API-039 -->
+    <select id="countByHouseholdId" resultType="int">
+        SELECT COUNT(*) FROM vehicle
+        WHERE household_id = #{householdId}
+          AND status != 'REJECTED'
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 번호판 중복 체크 | API-039 -->
+    <select id="existsByLicensePlate" resultType="int">
+        SELECT COUNT(*) FROM vehicle
+        WHERE license_plate = #{licensePlate}
+        AND status IN ('APPROVED', 'PENDING')
+        AND deleted_at IS NULL
+    </select>
+
+    <!-- 번호판으로 차량 ID 조회 (입출차 기록용) -->
+    <select id="findIdByLicensePlate" resultType="Long">
+        SELECT vehicle_id FROM vehicle
+        WHERE license_plate = #{licensePlate}
+          AND status = 'APPROVED'
+          AND deleted_at IS NULL
+            LIMIT 1
+    </select>
+
+    <!-- 차량 등록 | API-039 -->
+    <insert id="insertVehicle" useGeneratedKeys="true" keyProperty="vehicleId">
+        INSERT INTO vehicle (user_id, household_id, license_plate, car_model, car_type, status, created_at)
+        VALUES (#{userId}, #{householdId}, #{licensePlate}, #{carModel}, #{carType}, #{status}, NOW())
+    </insert>
+
+    <!-- 차량 수정 (licensePlate, carModel) | API-040 -->
+    <update id="updateVehicle">
+        UPDATE vehicle
+        <set>
+            <if test="licensePlate != null and licensePlate != ''">license_plate = #{licensePlate},</if>
+            <if test="carModel != null and carModel != ''">car_model = #{carModel},</if>
+        </set>
+        WHERE vehicle_id = #{vehicleId}
+        AND deleted_at IS NULL
+    </update>
+
+    <!-- 차량 소프트 딜리트 | API-041 -->
+    <update id="deleteVehicle">
+        UPDATE vehicle SET deleted_at = NOW()
+        WHERE vehicle_id = #{vehicleId}
+    </update>
+
+    <!-- 차량 승인 | ADMIN -->
+    <update id="approveVehicle">
+        UPDATE vehicle
+        SET status      = 'APPROVED',
+            approved_by = #{approvedBy},
+            approved_at = NOW()
+        WHERE vehicle_id = #{vehicleId}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 차량 거부 | ADMIN -->
+    <update id="rejectVehicle">
+        UPDATE vehicle
+        SET status = 'REJECTED',
+        deleted_at = NOW()  <!-- 거부일로 사용 -->
+        WHERE vehicle_id = #{vehicleId}
+        AND deleted_at IS NULL
+    </update>
+
+    <!-- 상태별 차량 수 조회 (통계용) | ADMIN -->
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM vehicle
+        WHERE status = #{status}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 내 차량 입출차 기록 조회 | API-043 -->
+    <select id="findLogsByUserId" resultType="com.apt.vehicle.dto.response.VehicleLogRes">
+        SELECT
+            pl.log_id,
+            pl.vehicle_id,
+            v.license_plate,
+            pl.entry_type,
+            pl.logged_at
+        FROM parking_log pl
+                 JOIN vehicle v ON pl.vehicle_id = v.vehicle_id
+        WHERE v.user_id = #{userId}
+        ORDER BY pl.logged_at DESC
+    </select>
+
+    <!-- 사용자 ID로 세대 ID 조회 | API-039 -->
+    <select id="findHouseholdIdByUserId" resultType="Long">
+        SELECT household_id
+        FROM user
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>
