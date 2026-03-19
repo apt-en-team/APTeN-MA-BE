@@ -27,4 +27,40 @@ public interface FacilityMapper {
     // 관리자 예약현황 페이지 시설 리스트
     List<FacilityListRes> getFacilityList();
 
+    /** 시설 타입 전체 조회 | API-044 */
+    List<FacilityType> findAllTypes();
+
+    /** 시설 타입 단건 조회 */
+    FacilityType findTypeById(Long typeId);
+
+    /** 시설 타입 등록 | API-045 */
+    void insertType(FacilityType facilityType);
+
+    /** 시설 타입 수정 | API-046 */
+    void updateType(FacilityType facilityType);
+
+    /** 시설 타입 삭제 | API-047 */
+    void deleteType(Long typeId);
+
+    /** 해당 타입 시설 존재 여부 (삭제 시 체크) | API-047 */
+    int countFacilitiesByTypeId(Long typeId);
+
+    /** 시설 목록 조회 (타입 필터) | API-048 */
+    List<Facility> findAll(Long typeId);
+
+    /** 시설 등록 | API-050 */
+    void insertFacility(Facility facility);
+
+    /** 시설 수정 | API-051 */
+    void updateFacility(Facility facility);
+
+    /** 시설 삭제 | API-052 */
+    void deleteFacility(Long facilityId);
+
+    /** 해당 시설 예약 존재 여부 (삭제 시 체크) | API-052 */
+    int countReservationsByFacilityId(Long facilityId);
+
+
+
+
 }

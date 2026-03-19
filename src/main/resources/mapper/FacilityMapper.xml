@@ -63,5 +63,46 @@
                       ON f.type_id = ft.type_id
     </select>
 
+    <select id="findAllActive" resultType="com.apt.facility.model.Facility">
+        SELECT
+        <include refid="facilityColumns"/>
+        FROM facility f
+        LEFT JOIN facility_type t ON f.type_id = t.type_id
+        WHERE f.is_active = 1
+        AND f.deleted_at IS NULL
+        ORDER BY f.type_id, f.facility_id
+    </select>
 
+    <!-- 시설 등록 | API-050 -->
+    <insert id="insertFacility" useGeneratedKeys="true" keyProperty="facilityId">
+        INSERT INTO facility (type_id, name, description, max_capacity, open_time, close_time, slot_duration, is_active, created_at)
+        VALUES (#{typeId}, #{name}, #{description}, #{maxCapacity}, #{openTime}, #{closeTime}, #{slotDuration}, #{active}, NOW())
+    </insert>
+
+    <!-- 시설 수정 | API-051 -->
+    <update id="updateFacility">
+        UPDATE facility
+        SET type_id       = #{typeId},
+            name          = #{name},
+            description   = #{description},
+            max_capacity  = #{maxCapacity},
+            open_time     = #{openTime},
+            close_time    = #{closeTime},
+            slot_duration = #{slotDuration},
+            is_active     = #{active}
+        WHERE facility_id = #{facilityId}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 시설 소프트 딜리트 | API-052 -->
+    <update id="deleteFacility">
+        UPDATE facility SET deleted_at = NOW()
+        WHERE facility_id = #{facilityId}
+    </update>
+
+    <!-- 해당 시설 예약 존재 여부 | API-052 삭제 체크 -->
+    <select id="countReservationsByFacilityId" resultType="int">
+        SELECT COUNT(*) FROM reservation
+        WHERE facility_id = #{facilityId}
+    </select>
 </mapper>

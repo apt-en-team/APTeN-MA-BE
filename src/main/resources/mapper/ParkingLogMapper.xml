@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.parking.mapper.ParkingLogMapper">
+
+    <!-- API-034 | 입출차 기록 INSERT -->
+    <insert id="insertParkingLog" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO parking_log
+        (license_plate, entry_type, vehicle_id, visitor_vehicle_id, fixed_visitor_vehicle_id, logged_at)
+        VALUES (#{licensePlate}, #{entryType}, #{vehicleId}, #{visitorVehicleId}, #{fixedVisitorVehicleId}, NOW())
+    </insert>
+
+    <!-- 차량 자동 판별 — 등록차량 -->
+    <select id="findVehicleIdByLicensePlate" resultType="Long">
+        SELECT vehicle_id
+        FROM vehicle
+        WHERE license_plate = #{licensePlate}
+          AND status = 'APPROVED' LIMIT 1
+    </select>
+
+    <!-- 차량 자동 판별 — 방문차량 (당일 + APPROVED + is_deleted=0) -->
+    <select id="findVisitorVehicleIdByLicensePlate" resultType="Long">
+        SELECT visitor_vehicle_id
+        FROM visitor_vehicle
+        WHERE license_plate = #{licensePlate}
+          AND visit_date = CURDATE()
+          AND status = 'APPROVED'
+          AND is_deleted = 0 LIMIT 1
+    </select>
+
+    <!-- 차량 자동 판별 — 고정방문차량 (기간 내 활성) -->
+    <select id="findFixedVisitorVehicleIdByLicensePlate" resultType="Long">
+        SELECT fixed_id
+        FROM fixed_visitor_vehicle
+        WHERE vehicle_number = #{licensePlate}
+          AND is_deleted = 0
+          AND start_date &lt;= CURDATE()
+          AND (end_date IS NULL OR end_date &gt;= CURDATE()) LIMIT 1
+    </select>
+
+    <!-- 등록차량 상세 정보 -->
+    <select id="findVehicleInfoByVehicleId" resultType="String">
+        SELECT CONCAT(h.dong, ' ', h.ho, ' ', u.name)
+        FROM vehicle v
+                 JOIN user u ON v.user_id = u.user_id
+                 JOIN household h ON v.household_id = h.household_id
+        WHERE v.vehicle_id = #{vehicleId}
+    </select>
+
+    <!-- 방문차량 상세 정보 -->
+    <select id="findVisitorVehicleInfoById" resultType="String">
+        SELECT visitor_name
+        FROM visitor_vehicle
+        WHERE visitor_vehicle_id = #{visitorVehicleId}
+    </select>
+
+    <!-- 고정방문차량 상세 정보 -->
+    <select id="findFixedVisitorVehicleInfoById" resultType="String">
+        SELECT CONCAT(visitor_name, ' (', IFNULL(purpose, '목적 없음'), ')')
+        FROM fixed_visitor_vehicle
+        WHERE fixed_id = #{fixedVisitorVehicleId}
+    </select>
+
+    <!-- API-035 | 입출차 기록 목록 조회 -->
+    <select id="findParkingLogs" resultType="com.apt.parking.dto.response.ParkingLogRes">
+        SELECT
+        log_id,
+        license_plate,
+        entry_type,
+        vehicle_id,
+        visitor_vehicle_id,
+        fixed_visitor_vehicle_id,
+        logged_at,
+        CASE
+        WHEN vehicle_id IS NOT NULL THEN '등록차량'
+        WHEN visitor_vehicle_id IS NOT NULL THEN '방문차량'
+        WHEN fixed_visitor_vehicle_id IS NOT NULL THEN '고정방문차량'
+        ELSE '미등록차량'
+        END AS vehicle_type
+        FROM parking_log
+        WHERE 1=1
+        <if test="licensePlate != null and licensePlate != ''">
+            AND license_plate LIKE CONCAT('%', #{licensePlate}, '%')
+        </if>
+        <if test="startDate != null">
+            AND DATE(logged_at) >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(logged_at) &lt;= #{endDate}
+        </if>
+        <if test="entryType != null and entryType != ''">
+            AND entry_type = #{entryType}
+        </if>
+        <if test="vehicleType != null and vehicleType != ''">
+            AND CASE
+            WHEN vehicle_id IS NOT NULL THEN '등록차량'
+            WHEN visitor_vehicle_id IS NOT NULL THEN '방문차량'
+            WHEN fixed_visitor_vehicle_id IS NOT NULL THEN '고정방문차량'
+            ELSE '미등록차량'
+            END = #{vehicleType}
+        </if>
+        ORDER BY logged_at DESC
+        LIMIT #{startIdx}, #{size}
+    </select>
+
+    <!-- API-035 | 총 건수 -->
+    <select id="countParkingLogs" resultType="int">
+        SELECT COUNT(*)
+        FROM parking_log
+        WHERE 1=1
+        <if test="licensePlate != null and licensePlate != ''">
+            AND license_plate LIKE CONCAT('%', #{licensePlate}, '%')
+        </if>
+        <if test="startDate != null">
+            AND DATE(logged_at) >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(logged_at) &lt;= #{endDate}
+        </if>
+        <if test="entryType != null and entryType != ''">
+            AND entry_type = #{entryType}
+        </if>
+        <if test="vehicleType != null and vehicleType != ''">
+            AND CASE
+            WHEN vehicle_id IS NOT NULL THEN '등록차량'
+            WHEN visitor_vehicle_id IS NOT NULL THEN '방문차량'
+            WHEN fixed_visitor_vehicle_id IS NOT NULL THEN '고정방문차량'
+            ELSE '미등록차량'
+            END = #{vehicleType}
+        </if>
+    </select>
+
+    <!-- API-036 | 입출차 통계 조회 -->
+    <select id="getParkingLogStats" resultType="com.apt.parking.dto.response.ParkingLogStatsRes">
+        SELECT SUM(CASE WHEN entry_type = 'IN' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0 END)            AS today_in,
+               SUM(CASE WHEN entry_type = 'OUT' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0
+                   END)                                                                                       AS today_out,
+               SUM(CASE
+                       WHEN vehicle_id IS NULL
+                           AND visitor_vehicle_id IS NULL
+                           AND fixed_visitor_vehicle_id IS NULL
+                           AND DATE (logged_at) = CURDATE()
+                   THEN 1 ELSE 0
+                   END)                                                                                       AS unregistered,
+               SUM(CASE
+                       WHEN DATE_FORMAT(logged_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m') THEN 1
+                       ELSE 0 END)                                                                            AS month_total
+        FROM parking_log
+    </select>
+
+</mapper>
