@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.parking.mapper.ParkingLotMapper">
+
+    <select id="findById" parameterType="long" resultType="com.apt.parking.model.ParkingLot">
+        SELECT lot_id, name, total_spaces
+        FROM parking_lot
+        WHERE lot_id = #{lotId}
+    </select>
+
+    <update id="update" parameterType="com.apt.parking.model.ParkingLot">
+        UPDATE parking_lot
+        SET name = #{name},
+            total_spaces = #{totalSpaces}
+        WHERE lot_id = #{lotId}
+    </update>
+
+</mapper>
