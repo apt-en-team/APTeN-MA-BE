@@ -265,4 +265,11 @@
         ) active_user ON active_user.household_id = h.household_id
     </select>
 
+    <select id="countPendingResidents" resultType="int">
+        SELECT COUNT(*)
+        FROM user
+        WHERE status = 'PENDING'
+          AND is_deleted = false
+    </select>
+
 </mapper>

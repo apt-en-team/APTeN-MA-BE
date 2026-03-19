@@ -25,5 +25,16 @@ public class ReservationRes {
     private Integer currentCount; // 일반 시설 확정 인원
     private Integer pendingCount; // GX 대기 인원
     private LocalDateTime approvedAt;
+    private LocalDateTime cancelledAt;
+    private Long maxCapacity;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String userName;
+    private String dong;
+    private String ho;
+    private Long typeId;
+    private String typeName;
+
+
 
 }
