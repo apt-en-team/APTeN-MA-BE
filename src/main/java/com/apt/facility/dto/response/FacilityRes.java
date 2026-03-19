@@ -42,7 +42,7 @@ public class FacilityRes {
     private int slotDuration;
 
     // 운영 여부
-    private boolean isActive;
+    private Boolean isActive;
 
     // 등록 일시
     private LocalDateTime createdAt;
