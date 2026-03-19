@@ -46,6 +46,13 @@ public class VehicleService {
         // 2. 번호판 공백 제거 (DB 저장 표준화: "12가 3456" -> "12가3456")
         String cleanLicensePlate = req.getLicensePlate().replaceAll("\\s", "");
 
+        // 추가: 차 모델 / 차량 종류 유효성 검사
+        if (req.getCarModel() == null || req.getCarModel().isBlank()) {
+            throw new CustomException(ErrorCode.VEHICLE_MODEL_REQUIRED);
+        }
+        if (req.getCarType() == null || req.getCarType().isBlank()) {
+            throw new CustomException(ErrorCode.VEHICLE_TYPE_REQUIRED);
+        }
         // 3. 유효성 체크: 세대당 차량 대수 제한 (2대)
         if (vehicleMapper.countByHouseholdId(householdId) >= 2) {
             throw new CustomException(ErrorCode.VEHICLE_LIMIT_EXCEEDED);
@@ -181,6 +188,12 @@ public class VehicleService {
         }
         if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
             throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
+        }
+        if (req.getCarModel() == null || req.getCarModel().isBlank()) {
+            throw new CustomException(ErrorCode.VEHICLE_MODEL_REQUIRED);
+        }
+        if (req.getCarType() == null || req.getCarType().isBlank()) {
+            throw new CustomException(ErrorCode.VEHICLE_TYPE_REQUIRED);
         }
 
         Vehicle vehicle = new Vehicle();

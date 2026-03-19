@@ -13,8 +13,11 @@
             u.name AS user_name
         FROM vehicle v
                  LEFT JOIN user u ON v.user_id = u.user_id
-        WHERE v.user_id = #{userId}
+        WHERE v.household_id = (
+            SELECT household_id FROM user WHERE user_id = #{userId}
+        )
           AND v.deleted_at IS NULL
+          AND v.status != 'REJECTED'
         ORDER BY v.created_at DESC
     </select>
 
@@ -98,8 +101,8 @@
     <select id="existsByLicensePlate" resultType="int">
         SELECT COUNT(*) FROM vehicle
         WHERE license_plate = #{licensePlate}
-        AND status IN ('APPROVED', 'PENDING')
-        AND deleted_at IS NULL
+          AND deleted_at IS NULL
+          AND status != 'REJECTED'
     </select>
 
     <!-- 번호판으로 차량 ID 조회 (입출차 기록용) -->
@@ -147,10 +150,9 @@
     <!-- 차량 거부 | ADMIN -->
     <update id="rejectVehicle">
         UPDATE vehicle
-        SET status = 'REJECTED',
-        deleted_at = NOW()  <!-- 거부일로 사용 -->
+        SET status = 'REJECTED'
         WHERE vehicle_id = #{vehicleId}
-        AND deleted_at IS NULL
+          AND deleted_at IS NULL
     </update>
 
     <!-- 상태별 차량 수 조회 (통계용) | ADMIN -->
