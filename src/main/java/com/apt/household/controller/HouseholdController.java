@@ -80,4 +80,10 @@ public class HouseholdController {
         return ResultResponse.success("입주민 조회 성공", householdService.getResidents(householdId));
     }
 
+    //입주민 전체 승인대기 건수
+    @GetMapping("/households/pending-count")
+    public ResultResponse<?> getPendingResidentCount() {
+        return ResultResponse.success("입주민 승인 대기 수 조회 성공", householdService.getPendingResidentCount());
+    }
+
 }

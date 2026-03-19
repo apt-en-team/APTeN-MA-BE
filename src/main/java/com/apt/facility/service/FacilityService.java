@@ -23,6 +23,16 @@ public class FacilityService {
 
     private final FacilityMapper facilityMapper;
 
+    // 실제 운영 중인 시설 목록 조회
+    public List<Facility> getFacilities() {
+        return facilityMapper.findAllActiveFacilities();
+    }
+
+    // 시설 타입 목록 조회
+    public List<FacilityType> getFacilityTypes() {
+        return facilityMapper.findAllTypes();
+    }
+
     /** API-044 | 시설 타입 전체 조회 */
     public List<FacilityTypeRes> getAllTypes() {
         return facilityMapper.findAllTypes().stream()
