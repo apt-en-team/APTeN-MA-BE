@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.parking.mapper.ParkingStatsMapper">
+
+    <!-- API-037 | 시간대별 통계 (hourly)
+         only_full_group_by 호환: 서브쿼리에서 직접 날짜/시간 조건 걸어서 참조 제거
+    -->
+    <select id="getHourlyStats" resultType="com.apt.parking.dto.response.ParkingStatsItemRes">
+        SELECT
+        g.date,
+        g.hour,
+        g.totalIn,
+        g.totalOut,
+        (
+        SELECT COUNT(*)
+        FROM parking_log
+        WHERE entry_type = 'IN'
+        AND DATE(logged_at) = g.date
+        AND HOUR(logged_at) &lt;= g.hour
+        ) - (
+        SELECT COUNT(*)
+        FROM parking_log
+        WHERE entry_type = 'OUT'
+        AND DATE(logged_at) = g.date
+        AND HOUR(logged_at) &lt;= g.hour
+        ) AS currentCount
+        FROM (
+        SELECT
+        DATE(logged_at)                                      AS date,
+        HOUR(logged_at)                                      AS hour,
+        SUM(CASE WHEN entry_type = 'IN'  THEN 1 ELSE 0 END) AS totalIn,
+        SUM(CASE WHEN entry_type = 'OUT' THEN 1 ELSE 0 END) AS totalOut
+        FROM parking_log
+        WHERE 1=1
+        <if test="startDate != null">
+            AND DATE(logged_at) &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(logged_at) &lt;= #{endDate}
+        </if>
+        GROUP BY DATE(logged_at), HOUR(logged_at)
+        ) g
+        ORDER BY g.date, g.hour
+    </select>
+
+    <!-- API-037 | 일별 통계 (daily)
+         only_full_group_by 호환: 서브쿼리에서 직접 날짜 조건 걸어서 참조 제거
+    -->
+    <select id="getDailyStats" resultType="com.apt.parking.dto.response.ParkingStatsItemRes">
+        SELECT
+        g.date,
+        NULL AS hour,
+        g.totalIn,
+        g.totalOut,
+        (
+        SELECT COUNT(*)
+        FROM parking_log
+        WHERE entry_type = 'IN'
+        AND DATE(logged_at) &lt;= g.date
+        ) - (
+        SELECT COUNT(*)
+        FROM parking_log
+        WHERE entry_type = 'OUT'
+        AND DATE(logged_at) &lt;= g.date
+        ) AS currentCount
+        FROM (
+        SELECT
+        DATE(logged_at)                                      AS date,
+        SUM(CASE WHEN entry_type = 'IN'  THEN 1 ELSE 0 END) AS totalIn,
+        SUM(CASE WHEN entry_type = 'OUT' THEN 1 ELSE 0 END) AS totalOut
+        FROM parking_log
+        WHERE 1=1
+        <if test="startDate != null">
+            AND DATE(logged_at) &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(logged_at) &lt;= #{endDate}
+        </if>
+        GROUP BY DATE(logged_at)
+        ) g
+        ORDER BY g.date
+    </select>
+
+</mapper>

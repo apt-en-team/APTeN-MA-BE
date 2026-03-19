@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
-    // ── 인증 관련 ─────────────────────────────────────────────────
+    // ── 인증 관련 
     UNAUTHORIZED(401, "인증이 필요합니다"),
     FORBIDDEN(403, "권한이 없습니다"),
     TOKEN_EXPIRED(401, "토큰이 만료되었습니다"),
@@ -23,7 +23,7 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(400, "이미 사용중인 이메일입니다"),
     INVALID_CREDENTIALS(401, "이메일 또는 비밀번호가 일치하지 않습니다"),
 
-    // ── 세대 관련 ─────────────────────────────────────────────────
+    // ── 세대 관련 
     HOUSEHOLD_NOT_FOUND(404, "세대를 찾을 수 없습니다"),
     DUPLICATE_HOUSEHOLD(400, "이미 존재하는 세대입니다"),
     // 소속 회원이 있는 세대는 삭제 불가 (FR-010)
@@ -42,13 +42,13 @@ public enum ErrorCode {
     // 고정 방문 차량 날짜 선택
     INVALID_DATE_RANGE(400,"종료일이 시작일보다 앞설 수 없습니다"),
 
-    // ── 차량 관련 ─────────────────────────────────────────────────
+    // ── 차량 관련 
     VEHICLE_NOT_FOUND(404, "차량을 찾을 수 없습니다"),
     // 세대당 최대 2대 제한 (FR-033, NFR-008)
     VEHICLE_LIMIT_EXCEEDED(400, "세대당 최대 2대까지 등록 가능합니다"),
     DUPLICATE_LICENSE_PLATE(400, "이미 등록된 차량번호입니다"),
 
-    // ── 시설 관련 ─────────────────────────────────────────────────
+    // ── 시설 관련 
     FACILITY_NOT_FOUND(404, "시설을 찾을 수 없습니다"),
     FACILITY_TYPE_NOT_FOUND(404, "시설 타입을 찾을 수 없습니다"),
     // 해당 타입으로 등록된 시설이 있으면 타입 삭제 불가 (FR-039)
@@ -56,7 +56,7 @@ public enum ErrorCode {
     // 예약이 존재하는 시설은 삭제 불가 (FR-042)
     FACILITY_HAS_RESERVATION(400, "예약이 있는 시설은 삭제할 수 없습니다"),
 
-    // ── 예약 관련 ─────────────────────────────────────────────────
+    // ── 예약 관련 
     // 동일 시설+날짜+시간+좌석 중복 예약 방지 (NFR-007)
     DUPLICATE_RESERVATION(409, "이미 예약된 시간입니다"),
     INVALID_DATE(409, "예약할 수 없는 날짜입니다"),
@@ -70,7 +70,7 @@ public enum ErrorCode {
     // [추가] 취소(삭제)할 예약이 존재하지 않는 경우
     NOT_FOUND_TO_CANCEL(404, "취소할 예약 정보를 찾을 수 없습니다"),
 
-    // ── 서버 오류 ─────────────────────────────────────────────────
+    // ── 서버 오류 
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다");
 
     // HTTP 상태 코드

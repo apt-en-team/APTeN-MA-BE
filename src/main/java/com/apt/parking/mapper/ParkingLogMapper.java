@@ -23,6 +23,7 @@ public interface ParkingLogMapper {
 
     Long findFixedVisitorVehicleIdByLicensePlate(String licensePlate);
 
+
     // 차량 상세 정보
     String findVehicleInfoByVehicleId(Long vehicleId);
 

@@ -42,12 +42,12 @@ public interface HouseholdMapper {
     //승인요청
     List<PendingUserDto> findPendingUsers(@Param("householdId") Long householdId);
 
-    // ── user ─────────────────────────────────────────────────────
+    // ── user ────
 
     // 세대 등록 (useGeneratedKeys=true → 생성된 PK가 household.householdId 에 자동 주입)
     void save(Household household);
 
-    // ── 이력 ─────────────────────────────────────────────────────
+    // ── 이력 ────
 
     // 입주/퇴거 이력 등록
     void insertHistory(HouseholdHistory history);
@@ -61,7 +61,7 @@ public interface HouseholdMapper {
     // 모달 등록입주민 내역
     List<ResidentDto> findResidents(@Param("householdId") Long householdId);
 
-    // ── 통계 ─────────────────────────────────────────────────────
+    // ── 통계 ────
 
     // 프론트 상단 통계 카드용 집계 조회
     // (전체/입주/공실/이번달 전입·전출 건수)

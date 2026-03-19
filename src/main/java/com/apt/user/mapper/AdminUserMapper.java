@@ -1,10 +1,15 @@
 package com.apt.user.mapper;
 
 import com.apt.user.dto.response.AdminUserRes;
+import com.apt.user.dto.response.UserSearchRes;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-// 관리자 회원 승인/거부 매퍼
+import java.util.List;
+
+// 관리자 회원 관리 매퍼
+// - 회원 승인/거부
+// - 입주민 검색 (동/호수 기준)
 @Mapper
 public interface AdminUserMapper {
 
@@ -17,4 +22,10 @@ public interface AdminUserMapper {
     // 세대 입주 이력 등록
     // household_history: household_id, user_id, status='입주', changed_at=NOW()
     void insertHistory(@Param("householdId") Long householdId, @Param("userId") Long userId);
+
+    // 입주민 검색 (동/호수 기준)
+    // dong: 선택 (null이면 전체 동 검색)
+    // ho: 필수
+    // user JOIN household → dong/ho 조건으로 APPROVED 입주민 리스트 반환
+    List<UserSearchRes> searchByHo(@Param("dong") String dong, @Param("ho") String ho);
 }
