@@ -22,7 +22,6 @@
     <select id="findAllTypes" resultType="com.apt.facility.model.FacilityType">
         SELECT type_id, name, description, created_at
         FROM facility_type
-        WHERE deleted_at IS NULL
         ORDER BY type_id ASC
     </select>
 
