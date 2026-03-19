@@ -92,6 +92,10 @@ public class HouseholdService {
     public List<ResidentDto> getResidents(Long householdId) {
         return householdMapper.findResidents(householdId);
     }
+
+    public int getPendingResidentCount() {
+        return householdMapper.countPendingResidents();
+    }
 }
 
 

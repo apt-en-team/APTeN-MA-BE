@@ -69,6 +69,12 @@ public enum ErrorCode {
     GX_ALREADY_PROCESSED(400, "이미 처리된 강의입니다"),
     // [추가] 취소(삭제)할 예약이 존재하지 않는 경우
     NOT_FOUND_TO_CANCEL(404, "취소할 예약 정보를 찾을 수 없습니다"),
+    NO_PENDING_RESERVATION(404, "대기 중인 예약이 없습니다"),
+    GX_PROGRAM_NOT_FOUND(404, "GX 프로그램을 찾을 수 없습니다"),
+    GX_CAPACITY_FULL(400, "정원이 가득 찼습니다"),
+    INVALID_RESERVATION_STATUS(400, "잘못된 예약 상태입니다"),
+    NO_RESERVATION_DATA(404, "조회된 예약 데이터가 없습니다"),
+    INVALID_PARAMETER(400, "잘못된 요청 파라미터입니다"),
 
     // ── 서버 오류 ─────────────────────────────────────────────────
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다");

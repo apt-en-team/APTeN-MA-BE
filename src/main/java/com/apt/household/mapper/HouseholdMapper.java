@@ -66,4 +66,6 @@ public interface HouseholdMapper {
     // 프론트 상단 통계 카드용 집계 조회
     // (전체/입주/공실/이번달 전입·전출 건수)
     HouseholdStatsRes getStats();
+
+    int countPendingResidents();
 }

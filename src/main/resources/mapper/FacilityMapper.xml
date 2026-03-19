@@ -29,20 +29,38 @@
         WHERE facility_id = #{facilityId}
     </select>
 
-    <!-- 운영 중인 시설 전체 조회 -->
-    <!-- 사용처: 예약 화면 시설 드롭다운 -->
-    <select id="findAllActive"
-            resultType="com.apt.facility.model.facilityType">
-        SELECT *
+    <!-- 운영 중인 실제 시설 전체 조회 -->
+    <select id="findAllActiveFacilities"
+            resultType="com.apt.facility.model.Facility">
+        SELECT
+        <include refid="facilityColumns"/>
+        FROM facility
+        WHERE is_active = 1
+    </select>
+
+    <!-- 시설 타입 전체 조회 -->
+    <select id="findAllTypes"
+            resultType="com.apt.facility.model.FacilityType">
+        SELECT
+            type_id    AS typeId,
+            name,
+            description,
+            created_at AS createdAt
         FROM facility_type
     </select>
 
     <!-- 예약 현황 페이지 시설 조회 -->
-    <select id="getFacilityList">
-        SELECT f.facility_id, f.name as facilityName, ft.type_id, ft.name as typeName, f.max_capacity
+    <select id="getFacilityList"
+            resultType="com.apt.facility.dto.response.FacilityListRes">
+        SELECT
+            f.facility_id AS facilityId,
+            f.name AS facilityName,
+            ft.type_id AS typeId,
+            ft.name AS typeName,
+            f.max_capacity AS maxCapacity
         FROM facility f
-        JOIN facility_type ft
-        ON f.type_id = ft.type_id
+                 JOIN facility_type ft
+                      ON f.type_id = ft.type_id
     </select>
 
 

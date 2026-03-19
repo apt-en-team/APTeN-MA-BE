@@ -6,6 +6,7 @@ import com.apt.facility.dto.response.FacilityListRes;
 import com.apt.facility.mapper.FacilityMapper;
 import com.apt.facility.model.Facility;
 import com.apt.household.dto.response.PageRes;
+import com.apt.reservation.dto.request.GxUserReq;
 import com.apt.reservation.dto.request.ReservationCalendarReq;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
@@ -30,6 +31,7 @@ public class ReservationService {
     private final ReservationMapper reservationMapper;
     private final FacilityMapper facilityMapper;
 
+
     // 시설 조회 (없으면 404)
     private Facility getFacility(Long facilityId) {
         Facility facility = facilityMapper.findById(facilityId);
@@ -42,20 +44,30 @@ public class ReservationService {
     // 예약 상태 조회 (없으면 404)
     private ReservationRes getReservation(Long id) {
         ReservationRes reservation = reservationMapper.findReservationById(id);
-        if(reservation.getStatus().equals("CANCELLED")||reservation.getStatus().equals("COMPLETED")){
+
+        if (reservation == null) {
+            throw new CustomException(ErrorCode.RESERVATION_NOT_FOUND);
+        }
+
+        if ("CANCELLED".equals(reservation.getStatus()) || "COMPLETED".equals(reservation.getStatus())) {
             throw new CustomException(ErrorCode.NOT_FOUND_TO_CANCEL);
         }
+
         return reservation;
     }
 
-    //매일 자정 확인된 예약 완료로 변경
-    // 0 0 0 * * * 는 매일 00:00:00을 의미
-    @Scheduled(cron = "0 0 0 * * *")
+    //매일 1시간마다 확인된 예약 완료로 변경
+    @Scheduled(cron = "0 0 * * * *") // 매시간 정각
     @Transactional
     public void updateReservationStatusToCompleted() {
+
+        System.out.println("예약 상태 업데이트 실행");
+
         // 오늘 날짜 이전(어제까지)이면서 상태가 'CONFIRMED'인 예약을 찾아서 'COMPLETED'로 변경
         // 오늘 날짜 이전(어제까지)이면서 상태가 'PENDING'인 예약을 찾아서 'CANCELLED'로 변경
-        int updatedCount = reservationMapper.updateStatusToCompleted(LocalDate.now());
+        int updatedCount = reservationMapper.updateStatusToCompleted(LocalDate.now(), LocalTime.now());
+
+        System.out.println("업데이트 개수: " + updatedCount);
     }
 
     //예약 가능 시간대 조회
@@ -130,10 +142,16 @@ public class ReservationService {
     public ReservationRes getReservationDetail(long id, long userId){
 
         ReservationRes reservation = reservationMapper.findReservationById(id);
-        //본인 예약 맞는지 확인
-        if(!reservation.getUserId().equals(userId)){
+
+        if (reservation == null) {
+            throw new CustomException(ErrorCode.RESERVATION_NOT_FOUND);
+        }
+
+        // 본인 예약 맞는지 확인
+        if (!reservation.getUserId().equals(userId)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
+
         return reservation;
     }
 
@@ -189,7 +207,7 @@ public class ReservationService {
     @Transactional
     public void forceAllCancel(long facilityId){
 
-        Facility facility = getFacility(facilityId);
+        getFacility(facilityId);
         reservationMapper.cancelAllReservation(facilityId);
     }
 
@@ -197,36 +215,49 @@ public class ReservationService {
     @Transactional
     public GxApprovalRes approveGx(Long programId) {
 
-        //Gx프로그램 조회
+        // GX 프로그램 조회
         GxProgram gxProgram = reservationMapper.findProgramById(programId);
+        if (gxProgram == null) {
+            throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
+        }
 
-        //PENDING 목록 (선착순)
-        List<ReservationRes> list = reservationMapper.findPendingByProgramId(programId);
-
-        //오류 체그 (프로그램 조회)
+        // 시설 존재 확인
         getFacility(gxProgram.getFacilityId());
-        //오류 체크 (상태 체크,,,필요한가? 어차피 XMl에서 상태가 대기인 정확한 정보를 들고옴)
+
+        // PENDING 목록 (선착순)
+        List<ReservationRes> list = reservationMapper.findPendingByProgramId(programId);
+        if (list == null || list.isEmpty()) {
+            throw new CustomException(ErrorCode.NO_PENDING_RESERVATION);
+        }
+
+        // 현재 이미 확정된 인원 수
+        int currentConfirmedCount = reservationMapper.countConfirmedByProgramId(programId);
+
+        // 남은 정원
+        int remainCapacity = gxProgram.getMaxCapacity() - currentConfirmedCount;
+        if (remainCapacity < 0) {
+            remainCapacity = 0;
+        }
 
         int confirmedCount = 0;
         int cancelledCount = 0;
 
-        //목록 값을 하나씩 넣어 승인 or 취소 로 상태 변경
-        for(ReservationRes gxReservation : list ) {
-            if(confirmedCount < gxProgram.getMaxCapacity()){
+        // 남은 정원만큼만 승인, 나머지는 취소
+        for (ReservationRes gxReservation : list) {
+            if (confirmedCount < remainCapacity) {
                 reservationMapper.approveReservation(gxReservation.getReservationId());
                 confirmedCount++;
-            }else {
+            } else {
                 reservationMapper.cancelOverflowReservation(gxReservation.getReservationId());
                 cancelledCount++;
             }
         }
 
-        //최대인원이 차면 프로그램 상태는 close로 변경 더이상 신청을 받지 않는다.
-        if(confirmedCount == gxProgram.getMaxCapacity()){
+        // 최종 확정 인원이 정원에 도달하면 프로그램 마감
+        if (currentConfirmedCount + confirmedCount >= gxProgram.getMaxCapacity()) {
             reservationMapper.closeProgram(programId);
         }
 
-        //프론트 전달 값 셋팅
         GxApprovalRes res = new GxApprovalRes();
         res.setProgramId(programId);
         res.setConfirmedCount(confirmedCount);
@@ -252,6 +283,94 @@ public class ReservationService {
     //관리자 캘린더페이지 조회
     public List<ReservationRes> getReservationsByFacility(ReservationCalendarReq req){
         return reservationMapper.getReservationsByFacility(req);
+    }
+
+    //관리자 캘린더페이지 GX조회
+    public List<GxTotalCountListRes> getReservationsByGxPrograms(ReservationCalendarReq req){
+        return reservationMapper.getReservationsByGxPrograms(req);
+    }
+
+    //독서실 남.여 나누기
+    public StudyRoomDetailRes getStudyRoomDetail(ReservationCalendarReq req) {
+
+        List<FacilityStatusRes> list = reservationMapper.getFacilityReservationRows(req);
+
+        // 결과 객체
+        StudyRoomDetailRes res = new StudyRoomDetailRes();
+
+        // 남/여 리스트
+        List<FacilityStatusRes> maleSeats = new ArrayList<>();
+        List<FacilityStatusRes> femaleSeats = new ArrayList<>();
+
+        for (FacilityStatusRes seat : list) {
+
+            // 예약 없으면 EMPTY 처리
+            if (seat.getStatus() == null) {
+                seat.setStatus("EMPTY");
+            }
+
+            //시설id로 분리
+            if (seat.getFacilityId().equals(1L)) {
+                maleSeats.add(seat);
+            } else if (seat.getFacilityId().equals(2L)) {
+                femaleSeats.add(seat);
+            }
+        }
+
+        res.setMaleSeats(maleSeats);
+        res.setFemaleSeats(femaleSeats);
+
+        return res;
+    }
+
+    //헬스장 예약 리스트
+    public GymDetailRes getGymDetail(ReservationCalendarReq req){
+
+        List<FacilityStatusRes> list = reservationMapper.getFacilityReservationRows(req);
+        GymDetailRes res = new GymDetailRes();
+        int totalCount = 0;
+        int confirmedCount = 0;
+        int cancelledCount = 0;
+
+        for (FacilityStatusRes item : list) {
+            if("CONFIRMED".equals(item.getStatus())){
+                confirmedCount++;
+            } else if ("CANCELLED".equals(item.getStatus())) {
+                cancelledCount++;
+            }
+            totalCount++;
+        }
+
+        res.setTotalCount(totalCount);
+        res.setConfirmedCount(confirmedCount);
+        res.setCancelledCount(cancelledCount);
+        res.setUserList(list);
+
+        return res;
+    }
+
+    public List<FacilityStatusRes> getGolfDetail(ReservationCalendarReq req) {
+        return reservationMapper.getFacilityReservationRows(req);
+    }
+
+    // GX 프로그램별 사용자 목록 조회
+    public List<GxUserRes> getGxUsersByProgram(GxUserReq req) {
+        return reservationMapper.getGxUsersByProgram(req);
+    }
+
+    // 대시보드 오늘 시설 예약 현황
+    public List<DashboardFacilitySummaryRes> getDashboardFacilitySummary() {
+        List<DashboardFacilitySummaryRes> list = reservationMapper.getDashboardFacilitySummary();
+
+        for (DashboardFacilitySummaryRes item : list) {
+            if (item.getTotalCount() == 0) {
+                item.setPercent(0);
+            } else {
+                item.setPercent((int) Math.round((double) item.getCurrentCount() * 100 / item.getTotalCount()));
+            }
+        }
+
+        return list;
     }
 
 }

@@ -2,6 +2,7 @@ package com.apt.facility.mapper;
 
 import com.apt.facility.dto.response.FacilityListRes;
 import com.apt.facility.model.Facility;
+import com.apt.facility.model.FacilityType;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -14,25 +15,16 @@ import java.util.List;
 @Mapper
 public interface FacilityMapper {
 
-    /**
-     * 시설 단건 조회
-     * - 예약 생성 시 시설 존재 여부 확인
-     * - 예약 가능 시간대 조회 시 open_time, close_time, slot_duration, max_capacity 사용
-     *
-     * @param facilityId 시설 ID
-     * @return Facility (없으면 null → 서비스에서 404 처리)
-     */
+    // 시설 단건 조회
     Facility findById(Long facilityId);
 
-    /**
-     * 전체 시설 목록 조회 (운영 중인 시설만)
-     * - 예약 화면 시설 드롭다운용
-     *
-     * @return is_active = 1 인 시설 리스트
-     */
-    List<Facility> findAllActive();
+    // 운영 중인 실제 시설 목록
+    List<Facility> findAllActiveFacilities();
 
-    //예약현황 페이지 리스트
+    // 시설 타입 목록
+    List<FacilityType> findAllTypes();
+
+    // 관리자 예약현황 페이지 시설 리스트
     List<FacilityListRes> getFacilityList();
 
 }

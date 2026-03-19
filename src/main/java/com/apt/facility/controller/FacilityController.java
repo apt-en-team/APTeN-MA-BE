@@ -16,8 +16,15 @@ import java.util.List;
 public class FacilityController {
     private final FacilityService facilityService;
 
+    // 실제 시설 목록 조회
     @GetMapping
     public ResultResponse<?> getFacilities() {
         return ResultResponse.success("시설 목록 조회 성공", facilityService.getFacilities());
+    }
+
+    // 시설 타입 목록 조회
+    @GetMapping("/types")
+    public ResultResponse<?> getFacilityTypes() {
+        return ResultResponse.success("시설 타입 목록 조회 성공", facilityService.getFacilityTypes());
     }
 }

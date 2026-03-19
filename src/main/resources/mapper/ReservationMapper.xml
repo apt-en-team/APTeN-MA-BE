@@ -8,11 +8,13 @@
     <update id="updateStatusToCompleted">
         UPDATE reservation
         SET status = CASE
-             WHEN status = 'CONFIRMED' THEN 'COMPLETED'
-             WHEN status = 'PENDING'   THEN 'CANCELLED'
+        WHEN status = 'CONFIRMED' THEN 'COMPLETED'
+        WHEN status = 'PENDING'   THEN 'CANCELLED'
         END
         WHERE status IN ('CONFIRMED', 'PENDING')
-        AND reservation_date &lt; #{today}
+        AND ( reservation_date  &lt; #{today}
+        OR ( reservation_date = #{today} AND end_time  &lt;= #{now} )
+        )
     </update>
     <!-- 예약 가능 시간대 조회 -->
     <select id="findAvailableTime"
@@ -224,12 +226,20 @@
     </select>
 
     <!-- Gx프로그램 조회 model 셋팅-->
-    <select id="findProgramById">
-        SELECT gx.program_id, gx.start_date, gx.end_date, gx.days_of_week, gx.status, gx.created_at,
-               f.facility_id, f.max_capacity
+    <select id="findProgramById"
+            resultType="com.apt.reservation.model.GxProgram">
+        SELECT
+            gx.program_id AS programId,
+            gx.start_date AS startDate,
+            gx.end_date AS endDate,
+            gx.days_of_week AS daysOfWeek,
+            gx.status,
+            gx.created_at AS createdAt,
+            f.facility_id AS facilityId,
+            f.max_capacity AS maxCapacity
         FROM gx_program gx
-        JOIN facility f
-        ON gx.facility_id = f.facility_id
+                 JOIN facility f
+                      ON gx.facility_id = f.facility_id
         WHERE gx.program_id = #{programId}
     </select>
 
@@ -270,6 +280,7 @@
         WHERE program_id = #{programId}
     </update>
 
+    <!-- GX전체 대기 카운트 -->
     <select id="pendingGx" resultType="com.apt.reservation.dto.response.GxPendingCount">
         SELECT count(*) AS pendingCount
         FROM reservation
@@ -314,6 +325,147 @@
                            ON u.household_id = h.household_id
         WHERE ft.type_id = #{typeId}
           AND r.reservation_date between #{startDate} and #{endDate};
+    </select>
+
+    <!-- GX프로그램 별 카운트 조회 -->
+    <select id="getReservationsByGxPrograms" resultType="com.apt.reservation.dto.response.GxTotalCountListRes">
+        SELECT f.facility_id, p.program_id, f.max_capacity, f.name AS facilityName,
+            COUNT(DISTINCT CASE
+                WHEN r.status = 'PENDING' THEN r.user_id
+                END) AS pendingCount,
+            COUNT(DISTINCT CASE
+                WHEN r.status = 'CONFIRMED' THEN r.user_id
+                END) AS confirmedCount,
+            COUNT(DISTINCT CASE
+                WHEN r.status = 'CANCELLED' THEN r.user_id
+                END) AS cancelledCount
+        FROM gx_program p
+        JOIN facility f
+        ON p.facility_id = f.facility_id
+        LEFT JOIN reservation r
+        ON p.program_id = r.program_id
+            AND r.reservation_date &gt;= #{startDate}
+            AND r.reservation_date &lt;= #{endDate}
+        WHERE f.type_id = #{typeId}
+            AND p.start_date &lt;= #{endDate}
+            AND p.end_date   &gt;= #{startDate}
+        GROUP BY p.program_id, f.facility_id, f.max_capacity
+    </select>
+
+    <!-- GX 현재 확정 인원 수 -->
+    <select id="countConfirmedByProgramId" resultType="int">
+        SELECT COUNT(*)
+        FROM reservation
+        WHERE program_id = #{programId}
+          AND status = 'CONFIRMED'
+    </select>
+
+    <!-- 독서실 / 헬스장 / 골프 공통 예약 조회 -->
+    <select id="getFacilityReservationRows"
+            resultType="com.apt.reservation.dto.response.FacilityStatusRes">
+        SELECT
+            r.start_time AS startTime,
+            r.end_time AS endTime,
+            r.seat_no AS seatNo,
+            u.name AS userName,
+            h.dong,
+            h.ho,
+            r.status,
+            f.facility_id AS facilityId,
+            f.name AS facilityName,
+            r.reservation_id AS reservationId,
+            u.user_id AS userId
+        FROM reservation r
+                 JOIN facility f
+                      ON r.facility_id = f.facility_id
+                 LEFT JOIN user u
+                           ON r.user_id = u.user_id
+                 LEFT JOIN household h
+                           ON u.household_id = h.household_id
+        WHERE f.type_id = #{typeId}
+          AND r.reservation_date = #{startDate}
+        ORDER BY f.facility_id, r.start_time, r.seat_no, r.created_at
+    </select>
+
+    <!-- GX 프로그램별 사용자 목록 조회 -->
+    <select id="getGxUsersByProgram"
+            resultType="com.apt.reservation.dto.response.GxUserRes">
+        SELECT
+        r.reservation_id AS reservationId,
+        r.user_id AS userId,
+        u.name AS userName,
+        h.dong,
+        h.ho,
+        r.status,
+        r.created_at AS createdAt
+        FROM reservation r
+        JOIN user u
+        ON r.user_id = u.user_id
+        LEFT JOIN household h
+        ON u.household_id = h.household_id
+        WHERE r.program_id = #{programId}
+          AND r.reservation_date &gt;= #{startDate}
+          AND r.reservation_date &lt;= #{endDate}
+        ORDER BY r.created_at ASC
+    </select>
+
+    <!-- 대시보드 오늘 시설 예약 현황 -->
+    <select id="getDashboardFacilitySummary"
+            resultType="com.apt.reservation.dto.response.DashboardFacilitySummaryRes">
+
+        WITH today_count AS (
+            SELECT f.type_id, COUNT(*) AS cnt
+            FROM reservation r
+                     JOIN facility f ON r.facility_id = f.facility_id
+            WHERE r.reservation_date = CURDATE()
+              AND r.status = 'CONFIRMED'
+              AND f.type_id IN (1, 2, 3)
+            GROUP BY f.type_id
+        )
+
+        SELECT
+            MIN(f.facility_id) AS facilityId,
+            MIN(ft.name)       AS facilityName,
+
+            CONCAT(
+                    TIME_FORMAT(MIN(f.open_time), '%H:%i'), '~',
+                    TIME_FORMAT(MAX(f.close_time), '%H:%i'), ' · ',
+                    CASE ft.type_id
+                        WHEN 1 THEN CONCAT('좌석 ', SUM(f.max_capacity), '석')
+                        WHEN 2 THEN CONCAT('정원 ', 50, '명')
+                        WHEN 3 THEN CONCAT('타석 ', MAX(f.max_capacity), '개')
+                        END
+            ) AS hours,
+
+            COALESCE(tc.cnt, 0) AS currentCount,
+            ft.type_id AS typeId,
+            CASE ft.type_id
+                WHEN 1 THEN SUM(f.max_capacity)
+                WHEN 2 THEN 50
+                WHEN 3 THEN TIMESTAMPDIFF(MINUTE, MIN(f.open_time), MAX(f.close_time)) / MAX(f.slot_duration) * MAX(f.max_capacity)
+                END AS totalCount,
+
+            CASE ft.type_id
+                WHEN 1 THEN 'green'
+                WHEN 2 THEN 'dark'
+                WHEN 3 THEN 'yellow'
+                END AS barColor,
+
+            CASE ft.type_id
+                WHEN 2 THEN false
+                ELSE COALESCE(tc.cnt, 0) >= CASE ft.type_id
+                WHEN 1 THEN SUM(f.max_capacity)
+                WHEN 3 THEN TIMESTAMPDIFF(MINUTE, MIN(f.open_time), MAX(f.close_time)) / MAX(f.slot_duration) * MAX(f.max_capacity)
+                    END
+                END AS isFull
+
+        FROM facility f
+                 JOIN facility_type ft ON f.type_id = ft.type_id
+                 LEFT JOIN today_count tc ON tc.type_id = ft.type_id
+        WHERE ft.type_id IN (1, 2, 3)
+        GROUP BY ft.type_id, tc.cnt
+        ORDER BY ft.type_id
+
     </select>
 
 
