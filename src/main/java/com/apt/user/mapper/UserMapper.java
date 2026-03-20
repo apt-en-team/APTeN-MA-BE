@@ -7,6 +7,8 @@ import com.apt.user.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 // user 테이블 접근 MyBatis Mapper
 @Mapper
 public interface UserMapper {
@@ -20,6 +22,9 @@ public interface UserMapper {
     // userId로 사용자 조회 (마이페이지용)
     UserGetMeRes findById(Long userId);
 
+    // userId로 User 엔티티 조회 (소셜 로그인 승인 상태 확인용)
+    User findUserById(@Param("userId") Long userId);
+
     // 소셜 로그인 제공자 + 제공자 ID로 사용자 조회
     User findByProviderAndProviderId(String provider, String providerId);
 
@@ -29,7 +34,7 @@ public interface UserMapper {
     // 소프트 딜리트 (is_deleted=1, deleted_at=NOW())
     int softDeleteUser(Long userId);
 
-    // 소셜 로그인 후 동호수 연결 + status APPROVED 처리
+    // 소셜 로그인 후 동호수 연결 (status는 PENDING 유지 → 관리자 승인 대기)
     int linkHousehold(@Param("userId") Long userId,
                       @Param("householdId") Long householdId,
                       @Param("phone") String phone);

@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ParkingLotRes {
-    private Long lotId;      // 주차장 ID
-    private String name;     // 주차장 이름
+    private Long lotId; // 주차장 ID
+    private String name; // 주차장 이름
     private int totalSpaces; // 전체 주차 면수
 }

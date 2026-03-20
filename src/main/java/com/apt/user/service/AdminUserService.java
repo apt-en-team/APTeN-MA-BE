@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 // 관리자 회원 관리 서비스
 // - 회원 승인/거부
@@ -63,5 +64,11 @@ public class AdminUserService {
             throw new IllegalArgumentException("동 또는 호수를 입력해주세요.");
         }
         return adminUserMapper.searchByHo(dong, ho);
+    }
+
+    // 승인 대기 중인 사용자 목록 조회
+    // status = PENDING 인 유저를 조회 후 UserSearchRes DTO로 변환해서 반환
+    public List<UserSearchRes> getPendingUsers() {
+        return adminUserMapper.findByStatus("PENDING"); // ← adminUserMapper 사용
     }
 }
