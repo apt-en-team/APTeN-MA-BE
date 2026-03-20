@@ -16,13 +16,14 @@ import java.util.List;
 
 /** 시설 관리 Controller | ADMIN */
 @RestController
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminFacilityController {
 
     private final FacilityService facilityService;
 
     /** API-045 | 시설 타입 등록 */
-    @PostMapping("/api/admin/facility-types")
+    @PostMapping("/facility-types")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<FacilityTypeRes>> createType(
             @RequestBody @Valid FacilityTypeReq req) {
@@ -31,7 +32,7 @@ public class AdminFacilityController {
     }
 
     /** API-046 | 시설 타입 수정 */
-    @PutMapping("/api/admin/facility-types/{id}")
+    @PutMapping("/facility-types/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<FacilityTypeRes>> updateType(
             @PathVariable Long id,
@@ -41,7 +42,7 @@ public class AdminFacilityController {
     }
 
     /** API-047 | 시설 타입 삭제 */
-    @DeleteMapping("/api/admin/facility-types/{id}")
+    @DeleteMapping("/facility-types/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<Void>> deleteType(
             @PathVariable Long id) {
@@ -50,7 +51,7 @@ public class AdminFacilityController {
     }
 
     /** API-050 | 시설 등록 */
-    @PostMapping("/api/admin/facilities")
+    @PostMapping("/facilities")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<FacilityRes>> createFacility(
             @RequestBody @Valid FacilityReq req) {
@@ -59,7 +60,7 @@ public class AdminFacilityController {
     }
 
     /** API-051 | 시설 수정 */
-    @PutMapping("/api/admin/facilities/{id}")
+    @PutMapping("/facilities/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<FacilityRes>> updateFacility(
             @PathVariable Long id,
@@ -69,11 +70,18 @@ public class AdminFacilityController {
     }
 
     /** API-052 | 시설 삭제 */
-    @DeleteMapping("/api/admin/facilities/{id}")
+    @DeleteMapping("/facilities/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResultResponse<Void>> deleteFacility(
             @PathVariable Long id) {
         facilityService.deleteFacility(id);
         return ResponseEntity.ok(ResultResponse.success("시설 삭제 성공", null));
+    }
+
+    /** API-044 | 시설 타입 목록 조회 */
+    @GetMapping("/facility-types")
+    public ResponseEntity<ResultResponse<List<FacilityTypeRes>>> getAllTypes() {
+        return ResponseEntity.ok(ResultResponse.success("시설 타입 목록 조회 성공",
+                facilityService.getAllTypes()));
     }
 }

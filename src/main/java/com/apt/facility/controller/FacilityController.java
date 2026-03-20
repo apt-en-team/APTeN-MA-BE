@@ -16,20 +16,14 @@ import java.util.List;
 
 /** 시설 Controller | RESIDENT */
 @RestController
+@RequestMapping("/api/facilities")
 @RequiredArgsConstructor
 public class FacilityController {
 
     private final FacilityService facilityService;
 
-    /** API-044 | 시설 타입 목록 조회 */
-    @GetMapping("/api/admin/facility-types")
-    public ResponseEntity<ResultResponse<List<FacilityTypeRes>>> getAllTypes() {
-        return ResponseEntity.ok(ResultResponse.success("시설 타입 목록 조회 성공",
-                facilityService.getAllTypes()));
-    }
-
     /** API-048 | 시설 목록 조회 */
-    @GetMapping("/api/facilities")
+    @GetMapping
     public ResponseEntity<ResultResponse<List<FacilityRes>>> getAllFacilities(
             @RequestParam(required = false) Long typeId) {
         return ResponseEntity.ok(ResultResponse.success("시설 목록 조회 성공",
@@ -37,7 +31,7 @@ public class FacilityController {
     }
 
     /** API-049 | 시설 상세 조회 */
-    @GetMapping("/api/facilities/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ResultResponse<FacilityRes>> getFacility(
             @PathVariable Long id) {
         return ResponseEntity.ok(ResultResponse.success("시설 상세 조회 성공",
@@ -45,13 +39,13 @@ public class FacilityController {
     }
 
     // 실제 시설 목록 조회
-    @GetMapping("/api/facilities")
+    @GetMapping("/type")
     public ResultResponse<?> getFacilities() {
         return ResultResponse.success("시설 목록 조회 성공", facilityService.getFacilities());
     }
 
     // 시설 타입 목록 조회
-    @GetMapping("/api/facilities/types")
+    @GetMapping("/all")
     public ResultResponse<?> getFacilityTypes() {
         return ResultResponse.success("시설 타입 목록 조회 성공", facilityService.getFacilityTypes());
     }
