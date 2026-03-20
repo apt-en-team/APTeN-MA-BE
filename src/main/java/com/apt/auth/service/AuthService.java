@@ -13,6 +13,7 @@ import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
 import com.apt.household.mapper.HouseholdMapper;
 import com.apt.household.model.Household;
+import com.apt.household.model.HouseholdHistory;
 import com.apt.user.mapper.UserMapper;
 import com.apt.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -104,7 +105,7 @@ public class AuthService {
         log.info("로그인 성공 - userId: {}, role: {}", user.getUserId(), user.getRole());
 
         // 프론트에서 role 기반 라우팅에 필요한 정보 반환
-        return new UserSignInRes(user.getUserId(), user.getName(), user.getRole(), user.getHouseholdId());
+        return new UserSignInRes(user.getUserId(), user.getName(), user.getRole(), user.getHouseholdId(), user.getStatus());
     }
 
     // 로그아웃 처리
@@ -154,8 +155,9 @@ public class AuthService {
         log.info("AT 재발급 완료 - userId: {}", jwtUser.getUserId());
     }
 
-    // 소셜 로그인 후 동호수 연결 + 승인 처리
-    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. status APPROVED 변경
+    // 소셜 로그인 후 동호수 연결
+    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. 입주 이력 등록
+    // status는 PENDING 유지 → 관리자가 직접 승인해야 APPROVED로 변경됨
     @Transactional
     public void linkHousehold(Long userId, LinkHouseholdReq req) {
 
@@ -165,9 +167,17 @@ public class AuthService {
             throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
         }
 
-        // household_id 연결 + status APPROVED 업데이트
+        // household_id + 전화번호 연결 (status는 PENDING 유지)
         userMapper.linkHousehold(userId, household.getHouseholdId(), req.getPhone());
-        log.info("동호수 연결 완료 - userId: {}, householdId: {}", userId, household.getHouseholdId());
+
+        // 입주 이력 등록 → 세대 상태 '입주'로 변경
+        HouseholdHistory history = new HouseholdHistory();
+        history.setHouseholdId(household.getHouseholdId());
+        history.setUserId(userId);
+        history.setStatus("입주");
+        householdMapper.insertHistory(history);
+
+        log.info("동호수 연결 완료 (승인 대기 중) - userId: {}, householdId: {}", userId, household.getHouseholdId());
     }
 
     // 이메일 중복 확인 (회원가입 전 사전 체크용)

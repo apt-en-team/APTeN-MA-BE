@@ -4,11 +4,12 @@
 
 <mapper namespace="com.apt.parking.mapper.ParkingLogMapper">
 
-    <!-- API-034 | 입출차 기록 INSERT -->
+    <!-- API-034 | 입출차 기록 INSERT
+         lot_id는 현재 단일 주차장이므로 1로 고정 -->
     <insert id="insertParkingLog" useGeneratedKeys="true" keyProperty="logId">
         INSERT INTO parking_log
-        (license_plate, entry_type, vehicle_id, visitor_vehicle_id, fixed_visitor_vehicle_id, logged_at)
-        VALUES (#{licensePlate}, #{entryType}, #{vehicleId}, #{visitorVehicleId}, #{fixedVisitorVehicleId}, NOW())
+        (lot_id, license_plate, entry_type, vehicle_id, visitor_vehicle_id, fixed_visitor_vehicle_id, logged_at)
+        VALUES (1, #{licensePlate}, #{entryType}, #{vehicleId}, #{visitorVehicleId}, #{fixedVisitorVehicleId}, NOW())
     </insert>
 
     <!-- 차량 자동 판별 — 등록차량 -->
@@ -133,19 +134,18 @@
 
     <!-- API-036 | 입출차 통계 조회 -->
     <select id="getParkingLogStats" resultType="com.apt.parking.dto.response.ParkingLogStatsRes">
-        SELECT SUM(CASE WHEN entry_type = 'IN' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0 END)            AS today_in,
-               SUM(CASE WHEN entry_type = 'OUT' AND DATE (logged_at) = CURDATE() THEN 1 ELSE 0
-                   END)                                                                                       AS today_out,
+        SELECT SUM(CASE WHEN entry_type = 'IN' AND DATE(logged_at) = CURDATE() THEN 1 ELSE 0 END)  AS today_in,
+               SUM(CASE WHEN entry_type = 'OUT' AND DATE(logged_at) = CURDATE() THEN 1 ELSE 0 END) AS today_out,
                SUM(CASE
                        WHEN vehicle_id IS NULL
                            AND visitor_vehicle_id IS NULL
                            AND fixed_visitor_vehicle_id IS NULL
-                           AND DATE (logged_at) = CURDATE()
+                           AND DATE(logged_at) = CURDATE()
                    THEN 1 ELSE 0
-                   END)                                                                                       AS unregistered,
+                   END)                                                                             AS unregistered,
                SUM(CASE
                        WHEN DATE_FORMAT(logged_at, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m') THEN 1
-                       ELSE 0 END)                                                                            AS month_total
+                       ELSE 0 END)                                                                  AS month_total
         FROM parking_log
     </select>
 

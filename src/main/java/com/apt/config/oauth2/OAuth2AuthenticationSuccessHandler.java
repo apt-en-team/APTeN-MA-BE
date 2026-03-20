@@ -6,6 +6,8 @@ import com.apt.common.security.JwtUser;
 import com.apt.common.security.UserPrincipal;
 import com.apt.config.security.JwtTokenManager;
 import com.apt.config.security.JwtTokenProvider;
+import com.apt.user.mapper.UserMapper;
+import com.apt.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-// 소셜 로그인 성공 시 JWT AT/RT 발급 후 Vue 앱으로 리다이렉트
+// 소셜 로그인 성공 시 JWT 발급 + 승인 상태(status)에 따라 Vue 앱으로 분기 리다이렉트
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -32,7 +34,10 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     // refresh_token 테이블 접근 (RT 저장/삭제)
     private final AuthMapper authMapper;
 
-    // 소셜 로그인 성공 후 리다이렉트할 Vue 앱 주소
+    // user 테이블 접근 (승인 상태 조회)
+    private final UserMapper userMapper;
+
+    // 소셜 로그인 성공 후 리다이렉트할 Vue 앱 기본 주소
     private static final String REDIRECT_URL = "http://localhost:5173/oauth2/callback";
 
     @Override
@@ -57,10 +62,27 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         authToken.setExpiredAt(LocalDateTime.now().plusDays(7));
         authMapper.saveRefreshToken(authToken);
 
-        log.info("소셜 로그인 성공 - userId: {}, role: {}", jwtUser.getUserId(), jwtUser.getRole());
+        // DB에서 현재 사용자의 승인 상태 조회
+        User user = userMapper.findUserById(jwtUser.getUserId());
+        String status = user.getStatus();
 
-        // Vue 앱 소셜 로그인 콜백 페이지로 리다이렉트
-        // 프론트에서 role 기반 대시보드로 다시 이동함
-        response.sendRedirect(REDIRECT_URL + "?role=" + jwtUser.getRole());
+        // 승인 상태에 따라 리다이렉트 URL 분기
+        // APPROVED  → 전체 메뉴 접근 가능 (정상 로그인)
+        // PENDING   → 대시보드/마이페이지만 접근 가능 (관리자 승인 대기 중)
+        // REJECTED  → 로그인 불가 (거절된 계정)
+        String redirectUrl;
+        if ("APPROVED".equals(status)) {
+            redirectUrl = REDIRECT_URL + "?role=" + jwtUser.getRole();
+        } else if ("PENDING".equals(status)) {
+            redirectUrl = REDIRECT_URL + "?role=" + jwtUser.getRole() + "&status=PENDING";
+        } else {
+            redirectUrl = "http://localhost:5173/login?error=rejected";
+        }
+
+        log.info("소셜 로그인 성공 - userId: {}, role: {}, status: {}",
+                jwtUser.getUserId(), jwtUser.getRole(), status);
+
+        // Vue 앱으로 리다이렉트
+        response.sendRedirect(redirectUrl);
     }
 }

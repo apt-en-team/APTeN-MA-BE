@@ -42,6 +42,9 @@ public enum ErrorCode {
     // 고정 방문 차량 날짜 선택
     INVALID_DATE_RANGE(400,"종료일이 시작일보다 앞설 수 없습니다"),
 
+    // ── 주차 관련
+    PARKING_LOT_NOT_FOUND(404, "주차장을 찾을 수 없습니다"),
+
     // ── 차량 관련 
     VEHICLE_NOT_FOUND(404, "차량을 찾을 수 없습니다"),
     // 세대당 최대 2대 제한 (FR-033, NFR-008)
