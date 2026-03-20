@@ -30,8 +30,11 @@ public class VehicleRes {
     /** 차량 번호판 */
     private String licensePlate;
 
-    /** 차종 */
+    /** 차 모델 */
     private String carModel;
+
+    /** 차종 타입 (경차/승용차/SUV/승합차) */
+    private String carType;
 
     /** 승인 상태 (PENDING / APPROVED / REJECTED) */
     private String status;
@@ -45,6 +48,7 @@ public class VehicleRes {
                 .vehicleId(v.getVehicleId())
                 .licensePlate(v.getLicensePlate())
                 .carModel(v.getCarModel())
+                .carType(v.getCarType())
                 .status(v.getStatus())
                 .createdAt(v.getCreatedAt())
                 .userName(v.getUserName())
