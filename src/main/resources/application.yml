@@ -1,47 +1,41 @@
 spring:
-  profiles:
-    active: local
-
   datasource:
-    url: jdbc:mysql://112.222.157.157:5013/my_apten?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_NAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  # Gmail SMTP 설정 (비밀번호 찾기 메일 발송용)
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${EMAIL}
-    password:  ${Password}
+    host: ${SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH}
           starttls:
-            enable: true
-
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE}
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
           naver:
-            client-id: ${NAVER_CLIENT_ID}
-            client-secret: ${NAVER_CLIENT_SECRET}
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_NAVER_CLIENT_SECRET}
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
               - name
               - email
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET}
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
@@ -68,18 +62,21 @@ mybatis:
 
 constants:
   jwt:
-    issuer: apt-management
-    bearer-format: JWT
-    claim-key: user
-    secret-key: ${JWT_SECRET_KEY}
-    access-token-cookie-name: at
-    access-token-cookie-path: /
-    access-token-cookie-validity-seconds: 604800
-    access-token-validity-milliseconds: 604800000
-    refresh-token-cookie-name: rt
-    refresh-token-cookie-path: /api/auth/refresh
-    refresh-token-cookie-validity-seconds: 604800
-    refresh-token-validity-milliseconds: 604800000
+    issuer: ${CONSTANTS_JWT_ISSUER}
+    bearer-format: ${CONSTANTS_JWT_BEARER_FORMAT}
+    claim-key: ${CONSTANTS_JWT_CLAIM_KEY}
+    secret-key: ${CONSTANTS_JWT_SECRET_KEY}
+    access-token-cookie-name: ${CONSTANTS_JWT_ACCESS_TOKEN_COOKIE_NAME}
+    access-token-cookie-path: ${CONSTANTS_JWT_ACCESS_TOKEN_COOKIE_PATH}
+    access-token-cookie-validity-seconds: ${CONSTANTS_JWT_ACCESS_TOKEN_COOKIE_VALIDITY_SECONDS}
+    access-token-validity-milliseconds: ${CONSTANTS_JWT_ACCESS_TOKEN_VALIDITY_MILLISECONDS}
+    refresh-token-cookie-name: ${CONSTANTS_JWT_REFRESH_TOKEN_COOKIE_NAME}
+    refresh-token-cookie-path: ${CONSTANTS_JWT_REFRESH_TOKEN_COOKIE_PATH}
+    refresh-token-cookie-validity-seconds: ${CONSTANTS_JWT_REFRESH_TOKEN_COOKIE_VALIDITY_SECONDS}
+    refresh-token-validity-milliseconds: ${CONSTANTS_JWT_REFRESH_TOKEN_VALIDITY_MILLISECONDS}
+
+file:
+  directory: ${FILE_DIRECTORY}
 
 server:
-  port: 8080
+  port: ${SERVER_PORT}

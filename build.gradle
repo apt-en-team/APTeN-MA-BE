@@ -25,6 +25,8 @@ repositories {
 
 dependencies {
 
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
     // 이메일 발송 (비밀번호 찾기)
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
