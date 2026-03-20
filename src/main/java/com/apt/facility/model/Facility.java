@@ -46,10 +46,15 @@ public class Facility {
     /** 운영 여부 (1: 운영, 0: 중단) */
     private boolean isActive;
 
+    /** 오늘 예약 수 */
+    private int todayReserved;
+
     /** 등록 일시 */
     private LocalDateTime createdAt;
 
+    /** 수강료 */
     private int price;
+
     /** 삭제 일시 (소프트 딜리트) */
     private LocalDateTime deletedAt;
 
