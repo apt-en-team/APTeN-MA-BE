@@ -35,35 +35,41 @@ public class VehicleService {
     }
 
     /** API-039 | 차량 등록 (세대당 2대 제한, 번호판 중복 체크) */
-    @Transactional // DB 반영 보장을 위해 추가
+    @Transactional
     public VehicleRes registerVehicle(VehicleReq req, Long userId) {
         // 1. 유저 ID로 세대(household) 정보 조회
         Long householdId = vehicleMapper.findHouseholdIdByUserId(userId);
         if (householdId == null) {
-            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND); // 세대 정보가 없는 경우 예외 처리
+            throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
         }
 
-        // 2. 번호판 공백 제거 (DB 저장 표준화: "12가 3456" -> "12가3456")
+        // 2. 번호판 필수값 체크 (가장 먼저)
+        if (req.getLicensePlate() == null || req.getLicensePlate().isBlank()) {
+            throw new CustomException(ErrorCode.LICENSE_PLATE_REQUIRED);
+        }
+
+        // 3. 번호판 공백 제거
         String cleanLicensePlate = req.getLicensePlate().replaceAll("\\s", "");
 
-        // 추가: 차 모델 / 차량 종류 유효성 검사
+        // 4. 차 모델 / 차량 종류 유효성 검사
         if (req.getCarModel() == null || req.getCarModel().isBlank()) {
             throw new CustomException(ErrorCode.VEHICLE_MODEL_REQUIRED);
         }
         if (req.getCarType() == null || req.getCarType().isBlank()) {
             throw new CustomException(ErrorCode.VEHICLE_TYPE_REQUIRED);
         }
-        // 3. 유효성 체크: 세대당 차량 대수 제한 (2대)
+
+        // 5. 세대당 차량 대수 제한 (2대)
         if (vehicleMapper.countByHouseholdId(householdId) >= 2) {
             throw new CustomException(ErrorCode.VEHICLE_LIMIT_EXCEEDED);
         }
 
-        // 4. 유효성 체크: 번호판 중복 체크 (공백 제거된 번호로 체크)
+        // 6. 번호판 중복 체크
         if (vehicleMapper.existsByLicensePlate(cleanLicensePlate) > 0) {
             throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
         }
 
-        // 5. Entity 객체 생성 및 데이터 매핑
+        // 7. Entity 생성 및 저장
         Vehicle vehicle = new Vehicle();
         vehicle.setUserId(userId);
         vehicle.setHouseholdId(householdId);
@@ -72,9 +78,7 @@ public class VehicleService {
         vehicle.setCarType(req.getCarType());
         vehicle.setStatus("PENDING");
 
-        // 6. DB 저장
         vehicleMapper.insertVehicle(vehicle);
-
         return VehicleRes.ofRegister(vehicle);
     }
 
@@ -183,10 +187,19 @@ public class VehicleService {
         Long householdId = vehicleMapper.findHouseholdIdByUserId(req.getUserId());
         if (householdId == null) throw new CustomException(ErrorCode.HOUSEHOLD_NOT_FOUND);
 
+        // 1. 번호판 필수값 체크 (가장 먼저)
+        if (req.getLicensePlate() == null || req.getLicensePlate().isBlank()) {
+            throw new CustomException(ErrorCode.LICENSE_PLATE_REQUIRED);
+        }
+
+        // 2. 번호판 공백 제거
+        String cleanLicensePlate = req.getLicensePlate().replaceAll("\\s", "");
+
+        // 3. 나머지 유효성 체크
         if (vehicleMapper.countByHouseholdId(householdId) >= 2) {
             throw new CustomException(ErrorCode.VEHICLE_LIMIT_EXCEEDED);
         }
-        if (vehicleMapper.existsByLicensePlate(req.getLicensePlate()) > 0) {
+        if (vehicleMapper.existsByLicensePlate(cleanLicensePlate) > 0) {
             throw new CustomException(ErrorCode.DUPLICATE_LICENSE_PLATE);
         }
         if (req.getCarModel() == null || req.getCarModel().isBlank()) {
@@ -199,7 +212,7 @@ public class VehicleService {
         Vehicle vehicle = new Vehicle();
         vehicle.setUserId(req.getUserId());
         vehicle.setHouseholdId(householdId);
-        vehicle.setLicensePlate(req.getLicensePlate());
+        vehicle.setLicensePlate(cleanLicensePlate); // 공백 제거된 번호판 저장
         vehicle.setCarModel(req.getCarModel());
         vehicle.setCarType(req.getCarType());
         vehicle.setStatus(req.getStatus());

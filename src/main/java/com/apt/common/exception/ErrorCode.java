@@ -47,6 +47,7 @@ public enum ErrorCode {
     // 세대당 최대 2대 제한 (FR-033, NFR-008)
     VEHICLE_LIMIT_EXCEEDED(400, "세대당 최대 2대까지 등록 가능합니다"),
     DUPLICATE_LICENSE_PLATE(400, "이미 등록된 차량번호입니다"),
+    LICENSE_PLATE_REQUIRED(400, "차량번호를 입력해주세요"),
     VEHICLE_MODEL_REQUIRED(400, "차 모델을 입력해주세요"),
     VEHICLE_TYPE_REQUIRED(400, "차량 종류를 선택해주세요"),
 
