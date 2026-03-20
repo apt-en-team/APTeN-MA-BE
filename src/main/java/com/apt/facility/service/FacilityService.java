@@ -87,9 +87,16 @@ public class FacilityService {
 
     /** API-050 | 시설 등록 */
     public FacilityRes createFacility(FacilityReq req) {
-        if (facilityMapper.findTypeById(req.getTypeId()) == null) {
+        // ✅ 필수값 검증
+        if (req.getTypeId() == null)
+            throw new CustomException(ErrorCode.FACILITY_TYPE_REQUIRED);
+        if (req.getName() == null || req.getName().isBlank())
+            throw new CustomException(ErrorCode.FACILITY_NAME_REQUIRED);
+        if (req.getMaxCapacity() == null)
+            throw new CustomException(ErrorCode.FACILITY_CAPACITY_REQUIRED);
+
+        if (facilityMapper.findTypeById(req.getTypeId()) == null)
             throw new CustomException(ErrorCode.FACILITY_TYPE_NOT_FOUND);
-        }
 
         Facility facility = new Facility();
         facility.setTypeId(req.getTypeId());
@@ -107,6 +114,14 @@ public class FacilityService {
 
     /** API-051 | 시설 수정 */
     public FacilityRes updateFacility(Long facilityId, FacilityReq req) {
+        // ✅ 필수값 검증
+        if (req.getTypeId() == null)
+            throw new CustomException(ErrorCode.FACILITY_TYPE_REQUIRED);
+        if (req.getName() == null || req.getName().isBlank())
+            throw new CustomException(ErrorCode.FACILITY_NAME_REQUIRED);
+        if (req.getMaxCapacity() == null)
+            throw new CustomException(ErrorCode.FACILITY_CAPACITY_REQUIRED);
+
         Facility facility = facilityMapper.findById(facilityId);
         if (facility == null) throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
 

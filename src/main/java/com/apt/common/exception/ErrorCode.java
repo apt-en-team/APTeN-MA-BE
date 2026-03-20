@@ -61,6 +61,9 @@ public enum ErrorCode {
     FACILITY_TYPE_HAS_FACILITY(400, "해당 타입의 시설이 존재하여 삭제할 수 없습니다"),
     // 예약이 존재하는 시설은 삭제 불가 (FR-042)
     FACILITY_HAS_RESERVATION(400, "예약이 있는 시설은 삭제할 수 없습니다"),
+    FACILITY_TYPE_REQUIRED(400, "시설 타입을 선택해주세요"),
+    FACILITY_NAME_REQUIRED(400, "시설명을 입력해주세요"),
+    FACILITY_CAPACITY_REQUIRED(400, "최대 인원을 입력해주세요"),
 
     // ── 예약 관련 
     // 동일 시설+날짜+시간+좌석 중복 예약 방지 (NFR-007)
