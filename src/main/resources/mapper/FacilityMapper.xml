@@ -7,17 +7,17 @@
     <!-- 공통 컬럼 -->
     <sql id="facilityColumns">
         f.facility_id AS facilityId,
-        f.type_id AS typeId,
-        f.name,
-        f.description,
-        f.max_capacity AS maxCapacity,
-        f.open_time AS openTime,
-        f.close_time AS closeTime,
-        f.slot_duration AS slotDuration,
-        f.is_active AS isActive,
-        f.created_at AS createdAt
+    f.type_id AS typeId,
+    f.name,
+    f.description,
+    f.max_capacity AS maxCapacity,
+    f.open_time AS openTime,
+    f.close_time AS closeTime,
+    f.slot_duration AS slotDuration,
+    f.is_active AS isActive,
+    f.price,
+    f.created_at AS createdAt
     </sql>
-
     <!-- 시설 타입 전체 조회 -->
     <select id="findAllTypes" resultType="com.apt.facility.model.FacilityType">
         SELECT type_id, name, description, created_at
@@ -102,12 +102,12 @@
         INSERT INTO facility (
             type_id, name, description,
             max_capacity, open_time, close_time,
-            slot_duration, is_active, created_at
+            slot_duration, is_active, price, created_at
         )
         VALUES (
                    #{typeId}, #{name}, #{description},
                    #{maxCapacity}, #{openTime}, #{closeTime},
-                   #{slotDuration}, #{active}, NOW()
+                   #{slotDuration}, #{active}, #{price}, NOW()
                )
     </insert>
 
@@ -121,7 +121,8 @@
             open_time     = #{openTime},
             close_time    = #{closeTime},
             slot_duration = #{slotDuration},
-            is_active     = #{active}
+            is_active     = #{active},
+            price         = #{price}
         WHERE facility_id = #{facilityId}
           AND deleted_at IS NULL
     </update>
@@ -156,6 +157,7 @@
         <include refid="facilityColumns"/>
         FROM facility f
         WHERE f.is_active = 1
+        AND f.deleted_at IS NULL
     </select>
 
 </mapper>

@@ -23,8 +23,14 @@ public class VehicleAdminRes {
     /** 차량 번호판 */
     private String licensePlate;
 
-    /** 차종 */
+    /** 차모델 */
     private String carModel;
+
+    /** 차종 */
+    private String carType;
+
+    /** 승인 일시 */
+    private LocalDateTime approvedAt;
 
     /** 승인 상태 (PENDING / APPROVED / REJECTED) */
     private String status;
@@ -55,15 +61,17 @@ public class VehicleAdminRes {
         return VehicleAdminRes.builder()
                 .vehicleId(v.getVehicleId())
                 .household(HouseholdInfo.builder()
-                        .dong(v.getDong())       // Model 필드 직접 접근
+                        .dong(v.getDong())
                         .ho(v.getHo())
                         .build())
                 .user(UserInfo.builder()
-                        .name(v.getUserName())   // Model 필드 직접 접근
+                        .name(v.getUserName())
                         .build())
                 .licensePlate(v.getLicensePlate())
                 .carModel(v.getCarModel())
+                .carType(v.getCarType())
                 .status(v.getStatus())
+                .approvedAt(v.getApprovedAt())
                 .createdAt(v.getCreatedAt())
                 .build();
     }

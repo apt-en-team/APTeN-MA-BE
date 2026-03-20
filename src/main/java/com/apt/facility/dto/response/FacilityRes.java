@@ -44,6 +44,9 @@ public class FacilityRes {
     // 운영 여부
     private Boolean isActive;
 
+    // 사용료
+    private int price;
+
     // 등록 일시
     private LocalDateTime createdAt;
 
@@ -59,6 +62,7 @@ public class FacilityRes {
         res.closeTime    = f.getCloseTime();
         res.slotDuration = f.getSlotDuration();
         res.isActive     = f.isActive();
+        res.price        = f.getPrice();
         res.createdAt    = f.getCreatedAt();
         return res;
     }

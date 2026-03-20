@@ -38,4 +38,9 @@ public class FacilityReq {
 
     /** 운영 여부 (기본 true) */
     private boolean isActive = true;
+
+    /** 사용료 (0: 무료) */
+    private int price = 0;
+
+
 }
