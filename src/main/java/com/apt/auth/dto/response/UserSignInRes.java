@@ -20,4 +20,6 @@ public class UserSignInRes {
 
     // 소속 세대 ID
     private Long householdId;
+
+    private String status;
 }

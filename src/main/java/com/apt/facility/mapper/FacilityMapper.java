@@ -27,9 +27,6 @@ public interface FacilityMapper {
     // 관리자 예약현황 페이지 시설 리스트
     List<FacilityListRes> getFacilityList();
 
-    /** 시설 타입 전체 조회 | API-044 */
-    List<FacilityType> findAllTypes();
-
     /** 시설 타입 단건 조회 */
     FacilityType findTypeById(Long typeId);
 

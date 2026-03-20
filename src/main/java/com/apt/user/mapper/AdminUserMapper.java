@@ -28,4 +28,7 @@ public interface AdminUserMapper {
     // ho: 필수
     // user JOIN household → dong/ho 조건으로 APPROVED 입주민 리스트 반환
     List<UserSearchRes> searchByHo(@Param("dong") String dong, @Param("ho") String ho);
+
+    // 승인 상태별 사용자 목록 조회 (관리자 승인 대기 목록용)
+    List<UserSearchRes> findByStatus(@Param("status") String status);
 }

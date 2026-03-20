@@ -5,25 +5,37 @@
 <mapper namespace="com.apt.parking.mapper.ParkingStatusMapper">
 
     <!-- 주차 현황 조회
-         current_count = IN 건수 - OUT 건수
-         registered_count / visitor_count / unregistered_count
-         = 현재 주차 중인 차량 (IN은 있고 OUT은 없는 차량번호 기준) -->
+         current_count    = IN 건수 - OUT 건수
+         registered_count = 현재 주차 중인 등록차량 수
+         visitor_count    = 현재 주차 중인 방문차량 수
+         fixed_visitor_count = 현재 주차 중인 고정방문차량 수
+         unregistered_count  = 현재 주차 중인 미등록차량 수
+         (vehicle_id / visitor_vehicle_id / fixed_visitor_vehicle_id 모두 NULL인 차량)
+         IN은 있고 같은 차량번호의 OUT이 없는 차량번호 기준으로 현재 주차 여부 판별 -->
     <select id="getParkingStatus" resultType="com.apt.parking.dto.response.ParkingStatusRes">
         SELECT pl.total_spaces,
 
-               -- 현재 주차 대수 (IN - OUT)
-               (SELECT COUNT(*) FROM parking_log WHERE entry_type = 'IN')
-                   - (SELECT COUNT(*) FROM parking_log WHERE entry_type = 'OUT')
-                                                                           AS current_count,
+               -- 현재 주차 대수 (IN은 있고 OUT이 없는 차량번호 기준)
+               (SELECT COUNT(*)
+                FROM parking_log p_in
+                WHERE p_in.entry_type = 'IN'
+                  AND NOT EXISTS (SELECT 1
+                                  FROM parking_log p_out
+                                  WHERE p_out.entry_type = 'OUT'
+                                    AND p_out.license_plate = p_in.license_plate
+                                    AND p_out.logged_at > p_in.logged_at)) AS current_count,
 
-               -- 남은 자리
-               pl.total_spaces - (
-                   (SELECT COUNT(*) FROM parking_log WHERE entry_type = 'IN')
-                       - (SELECT COUNT(*) FROM parking_log WHERE entry_type = 'OUT')
-                   )                                                       AS available_count,
+                -- 남은 자리
+               pl.total_spaces - (SELECT COUNT(*)
+                                  FROM parking_log p_in
+                                  WHERE p_in.entry_type = 'IN'
+                                    AND NOT EXISTS (SELECT 1
+                                                    FROM parking_log p_out
+                                                    WHERE p_out.entry_type = 'OUT'
+                                                      AND p_out.license_plate = p_in.license_plate
+                                                      AND p_out.logged_at > p_in.logged_at)) AS available_count,
 
-               -- 현재 주차 중인 등록차량
-               -- IN 기록은 있고, 같은 차량번호의 OUT 기록이 없는 것만
+               -- 현재 주차 중인 등록차량 (vehicle_id IS NOT NULL)
                (SELECT COUNT(*)
                 FROM parking_log p_in
                 WHERE p_in.entry_type = 'IN'
@@ -34,7 +46,7 @@
                                     AND p_out.license_plate = p_in.license_plate
                                     AND p_out.logged_at > p_in.logged_at)) AS registered_count,
 
-               -- 현재 주차 중인 방문차량
+               -- 현재 주차 중인 방문차량 (visitor_vehicle_id IS NOT NULL)
                (SELECT COUNT(*)
                 FROM parking_log p_in
                 WHERE p_in.entry_type = 'IN'
@@ -45,7 +57,19 @@
                                     AND p_out.license_plate = p_in.license_plate
                                     AND p_out.logged_at > p_in.logged_at)) AS visitor_count,
 
+               -- 현재 주차 중인 고정방문차량 (fixed_visitor_vehicle_id IS NOT NULL)
+               (SELECT COUNT(*)
+                FROM parking_log p_in
+                WHERE p_in.entry_type = 'IN'
+                  AND p_in.fixed_visitor_vehicle_id IS NOT NULL
+                  AND NOT EXISTS (SELECT 1
+                                  FROM parking_log p_out
+                                  WHERE p_out.entry_type = 'OUT'
+                                    AND p_out.license_plate = p_in.license_plate
+                                    AND p_out.logged_at > p_in.logged_at)) AS fixed_visitor_count,
+
                -- 현재 주차 중인 미등록차량
+               -- vehicle_id / visitor_vehicle_id / fixed_visitor_vehicle_id 모두 NULL인 경우
                (SELECT COUNT(*)
                 FROM parking_log p_in
                 WHERE p_in.entry_type = 'IN'
