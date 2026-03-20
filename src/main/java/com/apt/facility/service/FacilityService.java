@@ -118,6 +118,7 @@ public class FacilityService {
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
         facility.setIsActive(req.isActive());
+        facility.setPrice(req.getPrice());
 
         facilityMapper.updateFacility(facility);
         return FacilityRes.of(facility);
