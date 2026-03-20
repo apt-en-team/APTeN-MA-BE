@@ -58,4 +58,10 @@ public class Facility {
     /** 삭제 일시 (소프트 딜리트) */
     private LocalDateTime deletedAt;
 
+    // MyBatis 매핑용
+    public boolean getIsActive() { return isActive; }
+    public void setIsActive(boolean isActive) { this.isActive = isActive; }
+
+
+
 }

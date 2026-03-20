@@ -57,6 +57,11 @@ public interface FacilityMapper {
     /** 해당 시설 예약 존재 여부 (삭제 시 체크) | API-052 */
     int countReservationsByFacilityId(Long facilityId);
 
+    /** 오늘 전체 예약 건수 조회 */
+    int countTodayReservations();
+
+    /** 현재 시간 기준 이용 중인 인원 조회 */
+    int countCurrentInUse();
 
 
 

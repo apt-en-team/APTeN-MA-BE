@@ -99,7 +99,7 @@ public class FacilityService {
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
-        facility.setActive(req.isActive());
+        facility.setIsActive(req.isActive());
 
         facilityMapper.insertFacility(facility);
         return FacilityRes.of(facility);
@@ -117,7 +117,7 @@ public class FacilityService {
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
-        facility.setActive(req.isActive());
+        facility.setIsActive(req.isActive());
 
         facilityMapper.updateFacility(facility);
         return FacilityRes.of(facility);
@@ -133,4 +133,5 @@ public class FacilityService {
         }
         facilityMapper.deleteFacility(facilityId);
     }
+
 }
