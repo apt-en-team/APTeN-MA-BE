@@ -31,7 +31,6 @@
         SELECT type_id, name, description, created_at
         FROM facility_type
         WHERE type_id = #{typeId}
-          AND deleted_at IS NULL
     </select>
 
     <!-- 시설 타입 등록 -->
@@ -116,7 +115,7 @@
         VALUES (
                    #{typeId}, #{name}, #{description},
                    #{maxCapacity}, #{openTime}, #{closeTime},
-                   #{slotDuration}, #{active}, #{price}, NOW()
+                   #{slotDuration}, #{isActive}, #{price}, NOW()
                )
     </insert>
 
