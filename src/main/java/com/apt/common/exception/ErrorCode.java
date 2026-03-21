@@ -50,6 +50,9 @@ public enum ErrorCode {
     // 세대당 최대 2대 제한 (FR-033, NFR-008)
     VEHICLE_LIMIT_EXCEEDED(400, "세대당 최대 2대까지 등록 가능합니다"),
     DUPLICATE_LICENSE_PLATE(400, "이미 등록된 차량번호입니다"),
+    LICENSE_PLATE_REQUIRED(400, "차량번호를 입력해주세요"),
+    VEHICLE_MODEL_REQUIRED(400, "차 모델을 입력해주세요"),
+    VEHICLE_TYPE_REQUIRED(400, "차량 종류를 선택해주세요"),
 
     // ── 시설 관련 
     FACILITY_NOT_FOUND(404, "시설을 찾을 수 없습니다"),
@@ -58,6 +61,9 @@ public enum ErrorCode {
     FACILITY_TYPE_HAS_FACILITY(400, "해당 타입의 시설이 존재하여 삭제할 수 없습니다"),
     // 예약이 존재하는 시설은 삭제 불가 (FR-042)
     FACILITY_HAS_RESERVATION(400, "예약이 있는 시설은 삭제할 수 없습니다"),
+    FACILITY_TYPE_REQUIRED(400, "시설 타입을 선택해주세요"),
+    FACILITY_NAME_REQUIRED(400, "시설명을 입력해주세요"),
+    FACILITY_CAPACITY_REQUIRED(400, "최대 인원을 입력해주세요"),
 
     // ── 예약 관련 
     // 동일 시설+날짜+시간+좌석 중복 예약 방지 (NFR-007)

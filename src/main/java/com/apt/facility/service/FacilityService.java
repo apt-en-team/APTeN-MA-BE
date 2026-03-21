@@ -6,6 +6,7 @@ import com.apt.facility.dto.request.FacilityReq;
 import com.apt.facility.dto.request.FacilityTypeReq;
 import com.apt.facility.dto.response.FacilityRes;
 import com.apt.facility.dto.response.FacilityTypeRes;
+
 import com.apt.facility.mapper.FacilityMapper;
 import com.apt.facility.model.Facility;
 import com.apt.facility.model.FacilityType;
@@ -86,9 +87,16 @@ public class FacilityService {
 
     /** API-050 | 시설 등록 */
     public FacilityRes createFacility(FacilityReq req) {
-        if (facilityMapper.findTypeById(req.getTypeId()) == null) {
+        // ✅ 필수값 검증
+        if (req.getTypeId() == null)
+            throw new CustomException(ErrorCode.FACILITY_TYPE_REQUIRED);
+        if (req.getName() == null || req.getName().isBlank())
+            throw new CustomException(ErrorCode.FACILITY_NAME_REQUIRED);
+        if (req.getMaxCapacity() == null)
+            throw new CustomException(ErrorCode.FACILITY_CAPACITY_REQUIRED);
+
+        if (facilityMapper.findTypeById(req.getTypeId()) == null)
             throw new CustomException(ErrorCode.FACILITY_TYPE_NOT_FOUND);
-        }
 
         Facility facility = new Facility();
         facility.setTypeId(req.getTypeId());
@@ -98,7 +106,7 @@ public class FacilityService {
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
-        facility.setActive(req.isActive());
+        facility.setIsActive(req.isActive());
 
         facilityMapper.insertFacility(facility);
         return FacilityRes.of(facility);
@@ -106,6 +114,14 @@ public class FacilityService {
 
     /** API-051 | 시설 수정 */
     public FacilityRes updateFacility(Long facilityId, FacilityReq req) {
+        // ✅ 필수값 검증
+        if (req.getTypeId() == null)
+            throw new CustomException(ErrorCode.FACILITY_TYPE_REQUIRED);
+        if (req.getName() == null || req.getName().isBlank())
+            throw new CustomException(ErrorCode.FACILITY_NAME_REQUIRED);
+        if (req.getMaxCapacity() == null)
+            throw new CustomException(ErrorCode.FACILITY_CAPACITY_REQUIRED);
+
         Facility facility = facilityMapper.findById(facilityId);
         if (facility == null) throw new CustomException(ErrorCode.FACILITY_NOT_FOUND);
 
@@ -116,7 +132,8 @@ public class FacilityService {
         facility.setOpenTime(LocalTime.parse(req.getOpenTime()));
         facility.setCloseTime(LocalTime.parse(req.getCloseTime()));
         facility.setSlotDuration(req.getSlotDuration());
-        facility.setActive(req.isActive());
+        facility.setIsActive(req.isActive());
+        facility.setPrice(req.getPrice());
 
         facilityMapper.updateFacility(facility);
         return FacilityRes.of(facility);
@@ -132,4 +149,5 @@ public class FacilityService {
         }
         facilityMapper.deleteFacility(facilityId);
     }
+
 }

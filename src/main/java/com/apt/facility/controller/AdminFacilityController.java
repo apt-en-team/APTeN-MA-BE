@@ -84,4 +84,6 @@ public class AdminFacilityController {
         return ResponseEntity.ok(ResultResponse.success("시설 타입 목록 조회 성공",
                 facilityService.getAllTypes()));
     }
+
+
 }
