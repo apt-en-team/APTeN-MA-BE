@@ -111,19 +111,47 @@ public class ReservationService {
         //과거 날짜 체크
         if (req.getReservationDate().isBefore(LocalDate.now())) {
             throw new CustomException(ErrorCode.INVALID_DATE);
-        } //좌석 중복 체크 (seat_no != null인 경우)
-        if(req.getSeatNo() != null) {
-            int seatReserved = reservationMapper.countSeatReserved(req);
-            if(seatReserved > 0 ){
+        }
+
+        //GX 중복 신청 체크
+        if (req.getProgramId() != null) {
+            int exists = reservationMapper.countUserGxReservation(req.getUserId(), req.getProgramId());
+            if (exists > 0) {
                 throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
             }
-        } else { //정원 초과 체크 (seat_no == null인 경우)
-            int reservedCount = reservationMapper.countReserved(req);
-            if(reservedCount >= facility.getMaxCapacity() ){
-                throw new CustomException(ErrorCode.RESERVATION_FULL);
+        }
+
+        // 기존 같은 시간 예약 확인
+        ReservationRes existing = reservationMapper.findUserReservationByTime(req);
+
+        // 이미 살아있는 예약이면 막기
+        if (existing != null && !"CANCELLED".equals(existing.getStatus())) {
+            throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+
+        //좌석 중복 체크 (seat_no != null인 경우)
+        if (req.getProgramId() == null) {
+            if (req.getSeatNo() != null) {
+                int seatReserved = reservationMapper.countSeatReserved(req);
+                if (seatReserved > 0) {
+                    throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
+                }
+            } else { //정원 초과 체크 (seat_no == null인 경우)
+                int reservedCount = reservationMapper.countReserved(req);
+                if (reservedCount >= facility.getMaxCapacity()) {
+                    throw new CustomException(ErrorCode.RESERVATION_FULL);
+                }
             }
         }
         req.setStatus(req.getProgramId() != null ? "PENDING" : "CONFIRMED");
+
+        // 취소 이력이 있으면 재활성화
+        if (existing != null && "CANCELLED".equals(existing.getStatus())) {
+            reservationMapper.reactivateReservation(req);
+
+            ReservationRes reactivated = reservationMapper.findUserReservationByTime(req);
+            return reservationMapper.findReservationById(reactivated.getReservationId());
+        }
 
         reservationMapper.insertReservation(req);
         System.out.println("facilityId = " + req.getFacilityId());

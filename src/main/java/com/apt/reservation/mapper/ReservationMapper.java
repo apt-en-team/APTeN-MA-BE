@@ -24,6 +24,15 @@ public interface ReservationMapper {
     int countReserved(ReservationReq req); //정원 초과 체크
     void insertReservation(ReservationReq req);//insert
 
+    //같은 유저/날짜/시간 기존 예약 조회
+    ReservationRes findUserReservationByTime(ReservationReq req);
+
+    //취소된 예약 재활성화
+    int reactivateReservation(ReservationReq req);
+
+    //gx중복예약 방지
+    int countUserGxReservation(@Param("userId") Long userId, @Param("programId") Long programId);
+
     //예약 상세
     ReservationRes findReservationById(Long reservationId);//확인값 반환
 

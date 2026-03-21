@@ -116,8 +116,15 @@
             gx.end_date     AS endDate,
             gx.days_of_week AS daysOfWeek
         FROM facility f
-                 LEFT JOIN facility_type t  ON f.type_id       = t.type_id
-                 LEFT JOIN gx_program gx    ON f.facility_id   = gx.facility_id
+                 LEFT JOIN gx_program gx
+                           ON gx.program_id = (
+                               SELECT g.program_id
+                               FROM gx_program g
+                               WHERE g.facility_id = f.facility_id
+                                 AND g.status = 'OPEN'
+                               ORDER BY g.start_date ASC
+            LIMIT 1
+            )
         WHERE f.facility_id = #{facilityId}
           AND f.deleted_at IS NULL
     </select>

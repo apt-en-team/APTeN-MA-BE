@@ -65,6 +65,56 @@
             , status = #{status}
     </insert>
 
+    <!-- 같은 유저/날짜/시간 기존 예약 조회 -->
+    <select id="findUserReservationByTime"
+            parameterType="com.apt.reservation.dto.request.ReservationReq"
+            resultType="com.apt.reservation.dto.response.ReservationRes">
+        SELECT
+            reservation_id AS reservationId,
+            user_id AS userId,
+            facility_id AS facilityId,
+            program_id AS programId,
+            reservation_date AS reservationDate,
+            start_time AS startTime,
+            end_time AS endTime,
+            seat_no AS seatNo,
+            status,
+            created_at AS createdAt,
+            approved_at AS approvedAt,
+            cancelled_at AS cancelledAt
+        FROM reservation
+        WHERE user_id = #{userId}
+          AND reservation_date = #{reservationDate}
+          AND start_time = #{startTime}
+            LIMIT 1
+    </select>
+
+    <!-- 취소된 예약 재활성화 -->
+    <update id="reactivateReservation"
+            parameterType="com.apt.reservation.dto.request.ReservationReq">
+        UPDATE reservation
+        SET facility_id = #{facilityId},
+            program_id = #{programId},
+            end_time = #{endTime},
+            seat_no = #{seatNo},
+            status = #{status},
+            cancelled_at = NULL,
+            approved_at = NULL
+        WHERE user_id = #{userId}
+          AND reservation_date = #{reservationDate}
+          AND start_time = #{startTime}
+          AND status = 'CANCELLED'
+    </update>
+
+    <!-- gx중복예약 방지 -->
+    <select id="countUserGxReservation" resultType="int">
+        SELECT COUNT(*)
+        FROM reservation
+        WHERE user_id = #{userId}
+          AND program_id = #{programId}
+          AND status IN ('PENDING', 'CONFIRMED')
+    </select>
+
     <!-- 예약 상세 조회 -->
     <select id="findReservationById"
             resultType="com.apt.reservation.dto.response.ReservationRes">
