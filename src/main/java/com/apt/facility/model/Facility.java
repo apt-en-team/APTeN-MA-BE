@@ -55,6 +55,9 @@ public class Facility {
     /** 수강료 */
     private int price;
 
+    /** 현재 타임 예약 수 */
+    private int currentSlotReserved;
+
     /** 삭제 일시 (소프트 딜리트) */
     private LocalDateTime deletedAt;
 

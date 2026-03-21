@@ -53,6 +53,9 @@ public class FacilityRes {
     // 등록 일시
     private LocalDateTime createdAt;
 
+    // 현재 타임 예약 수
+    private int currentSlotReserved;
+
     public static FacilityRes of(Facility f) {
         FacilityRes res = new FacilityRes();
         res.facilityId   = f.getFacilityId();
@@ -68,6 +71,7 @@ public class FacilityRes {
         res.todayReserved = f.getTodayReserved();
         res.price        = f.getPrice();
         res.createdAt    = f.getCreatedAt();
+        res.currentSlotReserved = f.getCurrentSlotReserved();
         return res;
     }
 }
