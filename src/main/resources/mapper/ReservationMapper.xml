@@ -538,5 +538,34 @@
         </if>
     </select>
 
+    <!-- 독서실 날짜별 좌석 상태 조회 -->
+    <select id="getStudyRoomSeatStatus"
+            resultType="com.apt.reservation.dto.response.SeatStatusRes">
+        SELECT
+            r.seat_no AS seatNo,
+            r.status  AS status
+        FROM reservation r
+        WHERE r.facility_id = #{facilityId}
+          AND r.reservation_date = #{reservationDate}
+          AND r.status = 'CONFIRMED'
+          AND r.seat_no IS NOT NULL
+        ORDER BY r.seat_no
+    </select>
+
+    <!-- 골프 날짜+시간별 타석 상태 조회 -->
+    <select id="getGolfSeatStatus"
+            resultType="com.apt.reservation.dto.response.SeatStatusRes">
+        SELECT
+            r.seat_no AS seatNo,
+            r.status  AS status
+        FROM reservation r
+        WHERE r.facility_id = #{facilityId}
+          AND r.reservation_date = #{reservationDate}
+          AND r.start_time = #{startTime}
+          AND r.status = 'CONFIRMED'
+          AND r.seat_no IS NOT NULL
+        ORDER BY r.seat_no
+    </select>
+
 
 </mapper>

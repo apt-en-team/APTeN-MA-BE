@@ -24,6 +24,9 @@ public interface FacilityMapper {
     // 시설 타입 목록
     List<FacilityType> findAllTypes();
 
+    // 시설 카테고리 목록
+    List<FacilityType> getFacilityCategory();
+
     // 관리자 예약현황 페이지 시설 리스트
     List<FacilityListRes> getFacilityList();
 

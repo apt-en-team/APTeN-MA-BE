@@ -53,6 +53,7 @@ public class Facility {
     /** 등록 일시 */
     private LocalDateTime createdAt;
 
+    /** 수강료 */
     private int price;
 
     /** 삭제 일시 (소프트 딜리트) */
@@ -66,6 +67,5 @@ public class Facility {
     private LocalDate startDate;
     private LocalDate endDate;
     private String daysOfWeek;
-
 
 }

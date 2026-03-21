@@ -64,4 +64,16 @@ public class ReservationController {
         return ResultResponse.success("취소 성공", null);
     }
 
+    //독서실 좌석 상태 조회
+    @GetMapping("/study-room/seats")
+    public ResultResponse<?> getStudyRoomSeatStatus(SeatStatusReq req) {
+        return ResultResponse.success("조회 성공", reservationService.getStudyRoomSeatStatus(req));
+    }
+
+    //골프 타석 상태 조회
+    @GetMapping("/golf/seats")
+    public ResultResponse<?> getGolfSeatStatus(SeatStatusReq req) {
+        return ResultResponse.success("조회 성공", reservationService.getGolfSeatStatus(req));
+    }
+
 }

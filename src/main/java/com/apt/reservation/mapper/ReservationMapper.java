@@ -1,9 +1,6 @@
 package com.apt.reservation.mapper;
 
-import com.apt.reservation.dto.request.GxUserReq;
-import com.apt.reservation.dto.request.ReservationCalendarReq;
-import com.apt.reservation.dto.request.ReservationGetReq;
-import com.apt.reservation.dto.request.ReservationReq;
+import com.apt.reservation.dto.request.*;
 import com.apt.reservation.dto.response.*;
 import com.apt.reservation.model.GxProgram;
 import org.apache.ibatis.annotations.Mapper;
@@ -31,7 +28,8 @@ public interface ReservationMapper {
     ReservationRes findReservationById(Long reservationId);//확인값 반환
 
     //내 예약목록 조회
-    List<ReservationRes> findAll(ReservationGetReq req);
+    List<ReservationListRes> findAll(MyReservationReq req);
+    int countMyReservations(MyReservationReq req);
 
     //예약 취소
     int cancelReservation(long id);

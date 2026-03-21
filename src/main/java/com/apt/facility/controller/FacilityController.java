@@ -49,4 +49,10 @@ public class FacilityController {
     public ResultResponse<?> getFacilityTypes() {
         return ResultResponse.success("시설 타입 목록 조회 성공", facilityService.getFacilityTypes());
     }
+
+    // 시설 타입 카테고리 조회
+    @GetMapping("/type/category")
+    public ResultResponse<?> getFacilityCategory() {
+        return ResultResponse.success("시설 타입 목록 조회 성공", facilityService.getFacilityCategory());
+    }
 }
