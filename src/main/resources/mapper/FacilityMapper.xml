@@ -65,6 +65,7 @@
     <select id="findAll" resultType="com.apt.facility.model.Facility">
         SELECT
         <include refid="facilityColumns"/>,
+        COUNT(r.reservation_id) AS todayReserved,
         COUNT(r.reservation_id) AS todayReserved
         FROM facility f
         LEFT JOIN facility_type t ON f.type_id = t.type_id
