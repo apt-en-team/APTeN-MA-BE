@@ -54,6 +54,9 @@ public class FacilityRes {
     // 등록 일시
     private LocalDateTime createdAt;
 
+    // 현재 타임 예약 수
+    private int currentSlotReserved;
+
     private Long programId;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -79,6 +82,7 @@ public class FacilityRes {
         res.startDate = f.getStartDate();
         res.endDate   = f.getEndDate();
         res.daysOfWeek = f.getDaysOfWeek();
+        res.currentSlotReserved = f.getCurrentSlotReserved();
         return res;
     }
 }

@@ -59,7 +59,7 @@
                 OR h.dong          LIKE CONCAT('%', #{req.search}, '%'))
             </if>
         </where>
-        ORDER BY v.created_at DESC
+        ORDER BY CASE WHEN v.status = 'PENDING' THEN 0 ELSE 1 END ASC, v.created_at DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
 
