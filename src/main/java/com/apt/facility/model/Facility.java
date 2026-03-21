@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -52,7 +53,6 @@ public class Facility {
     /** 등록 일시 */
     private LocalDateTime createdAt;
 
-    /** 수강료 */
     private int price;
 
     /** 삭제 일시 (소프트 딜리트) */
@@ -62,6 +62,10 @@ public class Facility {
     public boolean getIsActive() { return isActive; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 
+    private Long programId;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String daysOfWeek;
 
 
 }

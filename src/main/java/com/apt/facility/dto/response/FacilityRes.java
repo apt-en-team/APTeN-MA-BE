@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -53,6 +54,12 @@ public class FacilityRes {
     // 등록 일시
     private LocalDateTime createdAt;
 
+    private Long programId;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String daysOfWeek;
+
+
     public static FacilityRes of(Facility f) {
         FacilityRes res = new FacilityRes();
         res.facilityId   = f.getFacilityId();
@@ -68,6 +75,10 @@ public class FacilityRes {
         res.todayReserved = f.getTodayReserved();
         res.price        = f.getPrice();
         res.createdAt    = f.getCreatedAt();
+        res.programId = f.getProgramId();
+        res.startDate = f.getStartDate();
+        res.endDate   = f.getEndDate();
+        res.daysOfWeek = f.getDaysOfWeek();
         return res;
     }
 }

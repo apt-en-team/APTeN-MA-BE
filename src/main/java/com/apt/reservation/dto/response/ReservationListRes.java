@@ -30,5 +30,6 @@ public class ReservationListRes {
     private LocalDateTime createdAt;
     private LocalDateTime cancelledAt;
     private LocalDateTime approvedAt;
+    private String daysOfWeek;
 
 }

@@ -72,4 +72,10 @@ public interface ReservationMapper {
     // 대시보드 오늘 시설 예약 현황
     List<DashboardFacilitySummaryRes> getDashboardFacilitySummary();
 
+    //독서실 좌석 상태 조회
+    List<SeatStatusRes> getStudyRoomSeatStatus(SeatStatusReq req);
+
+    //골프 타석 상태 조회
+    List<SeatStatusRes> getGolfSeatStatus(SeatStatusReq req);
+
 }

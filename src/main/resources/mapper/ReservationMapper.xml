@@ -93,6 +93,7 @@
             gx.start_date,
             gx.end_date,
             gx.program_id,
+            gx.days_of_week,
             u.name as userName,
             h.dong,
             h.ho,
@@ -135,30 +136,71 @@
     </select>
 
     <!-- 내 예약 조회 - 이용예정/지난내역/시설이름 필터 -->
-    <select id="findAll" resultType="com.apt.reservation.dto.response.ReservationRes">
-        SELECT r.reservation_id,
-               r.user_id,
-               f.name as facilityName,
-               r.reservation_date,
-               r.start_time,
-               r.end_time,
-               r.seat_no,
-               r.status
+    <select id="findAll" resultType="com.apt.reservation.dto.response.ReservationListRes">
+        SELECT
+        r.reservation_id AS reservationId,
+        r.user_id        AS userId,
+        r.facility_id    AS facilityId,
+        r.program_id     AS programId,
+
+        r.reservation_date AS reservationDate,
+        r.start_time       AS startTime,
+        r.end_time         AS endTime,
+        r.seat_no          AS seatNo,
+        r.status           AS status,
+        r.created_at       AS createdAt,
+        r.approved_at      AS approvedAt,
+        r.cancelled_at     AS cancelledAt,
+
+        f.name           AS facilityName,
+        f.max_capacity   AS maxCapacity,
+
+        ft.type_id       AS typeId,
+        ft.name          AS typeName,
+
+        gx.start_date    AS startDate,
+        gx.end_date      AS endDate,
+        gx.days_of_week ,
+
+        (SELECT COUNT(*)
+        FROM reservation r2
+        WHERE r2.facility_id      = r.facility_id
+        AND r2.reservation_date = r.reservation_date
+        AND r2.start_time       = r.start_time
+        AND r2.status           = 'CONFIRMED') AS currentCount,
+
+        (SELECT COUNT(*)
+        FROM reservation r2
+        WHERE r2.program_id = r.program_id
+        AND r2.status     = 'PENDING'
+        AND r.program_id IS NOT NULL) AS pendingCount
 
         FROM reservation r
-        left join facility f
+        JOIN facility f
         ON r.facility_id = f.facility_id
+        JOIN facility_type ft
+        ON f.type_id = ft.type_id
+        LEFT JOIN gx_program gx
+        ON r.program_id = gx.program_id
+
         WHERE r.user_id = #{userId}
-        <if test='status == "CONFIRMED"'>
+
+        <!-- 이용예정 -->
+        <if test="tab == 'UPCOMING'">
             AND r.status IN ('CONFIRMED', 'PENDING')
         </if>
-        <if test='status == "COMPLETED"'>
+
+        <!-- 지난예약 -->
+        <if test="tab == 'PAST'">
             AND r.status IN ('COMPLETED', 'CANCELLED')
         </if>
-        <if test="facilityName != null and facilityName != ''">
-            AND f.name LIKE CONCAT('%', #{facilityName}, '%')
+
+        <!-- 시설명 검색 -->
+        <if test="keyword != null and keyword != ''">
+            AND f.name LIKE CONCAT('%', #{keyword}, '%')
         </if>
-        ORDER BY r.reservation_date DESC, r.start_time DESC
+
+        ORDER BY r.reservation_date, r.start_time
         LIMIT #{startIdx}, #{size}
     </select>
 
@@ -466,6 +508,34 @@
         GROUP BY ft.type_id, tc.cnt
         ORDER BY ft.type_id
 
+    </select>
+
+    <select id="countMyReservations" resultType="int">
+        SELECT COUNT(*)
+        FROM reservation r
+        JOIN facility f
+        ON r.facility_id = f.facility_id
+        JOIN facility_type ft
+        ON f.type_id = ft.type_id
+        LEFT JOIN gx_program gx
+        ON r.program_id = gx.program_id
+
+        WHERE r.user_id = #{userId}
+
+        <!-- 이용예정 -->
+        <if test="tab == 'UPCOMING'">
+            AND r.status IN ('CONFIRMED', 'PENDING')
+        </if>
+
+        <!-- 지난예약 -->
+        <if test="tab == 'PAST'">
+            AND r.status IN ('COMPLETED', 'CANCELLED')
+        </if>
+
+        <!-- 시설명 검색 -->
+        <if test="keyword != null and keyword != ''">
+            AND f.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
     </select>
 
 

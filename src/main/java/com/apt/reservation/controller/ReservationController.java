@@ -2,8 +2,10 @@ package com.apt.reservation.controller;
 
 import com.apt.common.response.ResultResponse;
 import com.apt.common.security.UserPrincipal;
+import com.apt.reservation.dto.request.MyReservationReq;
 import com.apt.reservation.dto.request.ReservationGetReq;
 import com.apt.reservation.dto.request.ReservationReq;
+import com.apt.reservation.dto.request.SeatStatusReq;
 import com.apt.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,11 +35,18 @@ public class ReservationController {
 
     //내 예약 목록 (API-055 / UI-038) 상태기준 이용내역 or or'≥≥≥≥≥≥≥≥≥≥≥지난내역
     @GetMapping("/my")
-    public ResultResponse<?> getReservation(ReservationGetReq req
+    public ResultResponse<?> getReservation(MyReservationReq req
                           , @AuthenticationPrincipal UserPrincipal userPrincipal){
         req.setUserId(userPrincipal.getUserId());
         System.out.println("userId = " + req.getUserId());
         return ResultResponse.success("조회 성공", reservationService.findReservation(req));
+    }
+
+    @GetMapping("/count")
+    public ResultResponse<?> getCountgetReservation(MyReservationReq req
+            , @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        req.setUserId(userPrincipal.getUserId());
+        return ResultResponse.success("조회 성공", reservationService.getmyReservationPageInfo(req));
     }
 
     //예약 상세 조회 (API-056 / UI-039)
