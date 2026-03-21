@@ -1,9 +1,13 @@
 package com.apt.visitorvehicle.controller;
 
 import com.apt.common.response.ResultResponse;
+import com.apt.common.security.UserPrincipal;
+import com.apt.visitorvehicle.dto.request.FixedVisitorVehicleReq;
 import com.apt.visitorvehicle.service.FixedVisitorVehicleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/admin/visitor-vehicles/fixed")
@@ -20,6 +24,15 @@ public class AdminFixedVisitorVehicleController {
             @RequestParam(defaultValue = "10") int size) {
         return ResultResponse.success("조회 성공",
                 fixedVisitorVehicleService.getAdminFixedVisitorVehicles(vehicleNumber, dong, page, size));
+    }
+
+    // 관리자 고정 방문차량 등록
+    @PostMapping
+    public ResultResponse<?> registerAdminFixedVisitorVehicle(
+            @RequestBody FixedVisitorVehicleReq req,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        fixedVisitorVehicleService.adminRegisterFixedVisitorVehicle(req, userPrincipal.getUserId());
+        return ResultResponse.success("등록 성공", null);
     }
 
     // 관리자 고정 방문차량 통계
