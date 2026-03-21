@@ -3,6 +3,7 @@ package com.apt.config.security;
 import com.apt.config.oauth2.CustomOAuth2UserService;
 import com.apt.config.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,13 +15,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
 // Spring Security 보안 정책 설정 클래스
 @Configuration
 @RequiredArgsConstructor
-public class WebSecurityConfiguration {
+public class WebSecurityConfiguration implements WebMvcConfigurer {
 
     // 모든 요청에서 JWT 쿠키를 검사하는 커스텀 필터
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -30,6 +33,23 @@ public class WebSecurityConfiguration {
 
     // 소셜 로그인 성공 시 AT/RT 쿠키 발급 및 리다이렉트 처리
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    // application.yml 의 file.upload-dir 값 주입
+    @Value("${file.directory}")
+    private String directory;
+
+    /**
+     * /uploads/** URL 요청을 로컬 파일 시스템의 directory 폴더로 매핑
+     * 예) GET /uploads/uuid_image.jpg → C:/uploads/uuid_image.jpg (로컬)
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 경로 끝에 / 가 없으면 붙여줌
+        String location = directory.endsWith("/") ? directory : directory + "/";
+
+        registry.addResourceHandler("/apten/uploads/**")
+                .addResourceLocations("file:" + location);
+    }
 
     // 보안 필터체인 설정 (인증/인가 규칙 정의)
     @Bean
@@ -49,6 +69,9 @@ public class WebSecurityConfiguration {
 
                 // URL별 인증/인가 규칙 설정
                 .authorizeHttpRequests(auth -> auth
+                        // 업로드된 이미지 파일은 인증 없이 접근 가능
+                        .requestMatchers("/apten/uploads/**").permitAll()
+
                         // 인증 없이 접근 가능한 공개 API
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()

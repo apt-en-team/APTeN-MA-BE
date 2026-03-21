@@ -34,6 +34,18 @@ public enum ErrorCode {
     BOARD_NOT_FOUND(404, "게시글을 찾을 수 없습니다"),
     COMMENT_NOT_FOUND(404, "댓글을 찾을 수 없습니다"),
 
+    // ── 파일 관련 ─────────────────────────────────────────────────
+    FILE_EMPTY(400, "파일이 비어있습니다"),
+    FILE_SIZE_EXCEEDED(400, "파일 크기는 20MB를 초과할 수 없습니다"),
+    FILE_TYPE_NOT_ALLOWED(400, "허용되지 않는 파일 형식입니다"),
+    IMAGE_TYPE_NOT_ALLOWED(400, "이미지 파일만 업로드 가능합니다"),
+    IMAGE_SIZE_EXCEEDED(400, "이미지 크기는 20MB를 초과할 수 없습니다"),
+    FILE_SAVE_FAILED(500, "파일 저장 중 오류가 발생했습니다"),
+    FILE_MOVE_FAILED(500, "파일 이동 중 오류가 발생했습니다"),
+    FILE_DELETE_FAILED(500, "파일 삭제 중 오류가 발생했습니다"),
+    INVALID_FILE_PATH(400, "올바르지 않은 파일 경로입니다"),
+    FILE_ACCESS_DENIED(403, "파일 접근 권한이 없습니다"),
+
     // ── 방문차량 관련 ─────────────────────────────────────────────
     VISITOR_VEHICLE_NOT_FOUND(404, "방문차량을 찾을 수 없습니다"),
     // 방문 예정일로 과거 날짜 선택 불가

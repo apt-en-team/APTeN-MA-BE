@@ -19,11 +19,11 @@ public class BoardRes {
     private int viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private int isDeleted;
 
     // 추가
     private String authorName;   // user.name
     private String authorUnit; // household.dong + ho  ← 추가
     private int commentCount;    // comment 테이블 COUNT
     // private int likeCount;    // 좋아요 기능 없으면 생략
-    // private String thumbnail; // 썸네일 기능 없으면 생략
 }
