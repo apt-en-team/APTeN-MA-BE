@@ -71,4 +71,5 @@ public class Facility {
     private LocalDate endDate;
     private String daysOfWeek;
 
+
 }
