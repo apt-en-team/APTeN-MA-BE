@@ -110,7 +110,6 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
                 // Spring Security 기본 필터 앞에 JWT 필터 삽입
                 // → 매 요청마다 AT 쿠키 검사 후 인증 처리
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-
                 .build();
     }
 
@@ -120,7 +119,7 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
         CorsConfiguration config = new CorsConfiguration();
 
         // 허용할 출처 (Vue 개발 서버)
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:5177","http://localhost:5176","http://localhost:3000"));
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:5175","http://localhost:5176"));
 
         // 허용할 HTTP 메서드 - PATCH 추가
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
