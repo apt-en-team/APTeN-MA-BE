@@ -11,7 +11,7 @@ public class Comment {
     private Long boardId;
     private Long userId;
     private String content;
-    private int isDeleted;        // 0: 정상, 1: 삭제
+    private int isDeleted;  // 0: 정상, 1: 삭제
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
