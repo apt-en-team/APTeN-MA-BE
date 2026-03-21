@@ -223,27 +223,6 @@
         WHERE facility_id = #{facilityId}
     </select>
 
-    <!-- 예약 페이지용 시설 목록 (다른 팀원 기능 유지) -->
-    <select id="getFacilityList"
-            resultType="com.apt.facility.dto.response.FacilityListRes">
-        SELECT
-            f.facility_id AS facilityId,
-            f.name AS facilityName,
-            ft.type_id AS typeId,
-            ft.name AS typeName,
-            f.max_capacity AS maxCapacity
-        FROM facility f
-                 JOIN facility_type ft ON f.type_id = ft.type_id
-    </select>
-
-    <select id="findAllActiveFacilities" resultType="com.apt.facility.model.Facility">
-        SELECT
-        <include refid="facilityColumns"/>
-        FROM facility f
-        WHERE f.is_active = 1
-        AND f.deleted_at IS NULL
-    </select>
-
 
 
 </mapper>
