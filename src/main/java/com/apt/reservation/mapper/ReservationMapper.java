@@ -1,9 +1,6 @@
 package com.apt.reservation.mapper;
 
-import com.apt.reservation.dto.request.GxUserReq;
-import com.apt.reservation.dto.request.ReservationCalendarReq;
-import com.apt.reservation.dto.request.ReservationGetReq;
-import com.apt.reservation.dto.request.ReservationReq;
+import com.apt.reservation.dto.request.*;
 import com.apt.reservation.dto.response.*;
 import com.apt.reservation.model.GxProgram;
 import org.apache.ibatis.annotations.Mapper;
@@ -27,11 +24,21 @@ public interface ReservationMapper {
     int countReserved(ReservationReq req); //정원 초과 체크
     void insertReservation(ReservationReq req);//insert
 
+    //같은 유저/날짜/시간 기존 예약 조회
+    ReservationRes findUserReservationByTime(ReservationReq req);
+
+    //취소된 예약 재활성화
+    int reactivateReservation(ReservationReq req);
+
+    //gx중복예약 방지
+    int countUserGxReservation(@Param("userId") Long userId, @Param("programId") Long programId);
+
     //예약 상세
     ReservationRes findReservationById(Long reservationId);//확인값 반환
 
     //내 예약목록 조회
-    List<ReservationRes> findAll(ReservationGetReq req);
+    List<ReservationListRes> findAll(MyReservationReq req);
+    int countMyReservations(MyReservationReq req);
 
     //예약 취소
     int cancelReservation(long id);
@@ -71,5 +78,11 @@ public interface ReservationMapper {
 
     // 대시보드 오늘 시설 예약 현황
     List<DashboardFacilitySummaryRes> getDashboardFacilitySummary();
+
+    //독서실 좌석 상태 조회
+    List<SeatStatusRes> getStudyRoomSeatStatus(SeatStatusReq req);
+
+    //골프 타석 상태 조회
+    List<SeatStatusRes> getGolfSeatStatus(SeatStatusReq req);
 
 }

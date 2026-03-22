@@ -33,6 +33,11 @@ public class FacilityService {
         return facilityMapper.findAllTypes();
     }
 
+    // 시설 카테고리 목록 조회
+    public List<FacilityType> getFacilityCategory() {
+        return facilityMapper.getFacilityCategory();
+    }
+
     /** API-044 | 시설 타입 전체 조회 */
     public List<FacilityTypeRes> getAllTypes() {
         return facilityMapper.findAllTypes().stream()

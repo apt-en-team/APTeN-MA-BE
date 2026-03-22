@@ -6,10 +6,7 @@ import com.apt.facility.dto.response.FacilityListRes;
 import com.apt.facility.mapper.FacilityMapper;
 import com.apt.facility.model.Facility;
 import com.apt.household.dto.response.PageRes;
-import com.apt.reservation.dto.request.GxUserReq;
-import com.apt.reservation.dto.request.ReservationCalendarReq;
-import com.apt.reservation.dto.request.ReservationGetReq;
-import com.apt.reservation.dto.request.ReservationReq;
+import com.apt.reservation.dto.request.*;
 import com.apt.reservation.dto.response.*;
 import com.apt.reservation.mapper.ReservationMapper;
 import com.apt.reservation.model.GxProgram;
@@ -114,19 +111,47 @@ public class ReservationService {
         //과거 날짜 체크
         if (req.getReservationDate().isBefore(LocalDate.now())) {
             throw new CustomException(ErrorCode.INVALID_DATE);
-        } //좌석 중복 체크 (seat_no != null인 경우)
-        if(req.getSeatNo() != null) {
-            int seatReserved = reservationMapper.countSeatReserved(req);
-            if(seatReserved > 0 ){
+        }
+
+        //GX 중복 신청 체크
+        if (req.getProgramId() != null) {
+            int exists = reservationMapper.countUserGxReservation(req.getUserId(), req.getProgramId());
+            if (exists > 0) {
                 throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
             }
-        } else { //정원 초과 체크 (seat_no == null인 경우)
-            int reservedCount = reservationMapper.countReserved(req);
-            if(reservedCount >= facility.getMaxCapacity() ){
-                throw new CustomException(ErrorCode.RESERVATION_FULL);
+        }
+
+        // 기존 같은 시간 예약 확인
+        ReservationRes existing = reservationMapper.findUserReservationByTime(req);
+
+        // 이미 살아있는 예약이면 막기
+        if (existing != null && !"CANCELLED".equals(existing.getStatus())) {
+            throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+
+        //좌석 중복 체크 (seat_no != null인 경우)
+        if (req.getProgramId() == null) {
+            if (req.getSeatNo() != null) {
+                int seatReserved = reservationMapper.countSeatReserved(req);
+                if (seatReserved > 0) {
+                    throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
+                }
+            } else { //정원 초과 체크 (seat_no == null인 경우)
+                int reservedCount = reservationMapper.countReserved(req);
+                if (reservedCount >= facility.getMaxCapacity()) {
+                    throw new CustomException(ErrorCode.RESERVATION_FULL);
+                }
             }
         }
         req.setStatus(req.getProgramId() != null ? "PENDING" : "CONFIRMED");
+
+        // 취소 이력이 있으면 재활성화
+        if (existing != null && "CANCELLED".equals(existing.getStatus())) {
+            reservationMapper.reactivateReservation(req);
+
+            ReservationRes reactivated = reservationMapper.findUserReservationByTime(req);
+            return reservationMapper.findReservationById(reactivated.getReservationId());
+        }
 
         reservationMapper.insertReservation(req);
         System.out.println("facilityId = " + req.getFacilityId());
@@ -134,8 +159,15 @@ public class ReservationService {
     }
 
     //내 예약 목록 조회
-    public List<ReservationRes> findReservation(ReservationGetReq req){
+    public List<ReservationListRes> findReservation(MyReservationReq req){
         return reservationMapper.findAll(req);
+    }
+
+    // 내 페이지 정보
+    public PageRes getmyReservationPageInfo(MyReservationReq req) {
+        int totalCount = reservationMapper.countMyReservations(req);
+        int maxPage    = (int) Math.ceil((double) totalCount / req.getSize());
+        return new PageRes(maxPage, totalCount);
     }
 
     //예약 상세 조회
@@ -372,5 +404,18 @@ public class ReservationService {
 
         return list;
     }
+
+    //독서실 좌석 상태 조회
+    public List<SeatStatusRes> getStudyRoomSeatStatus(SeatStatusReq req) {
+        getFacility(req.getFacilityId());
+        return reservationMapper.getStudyRoomSeatStatus(req);
+    }
+
+    //골프 타석 상태 조회
+    public List<SeatStatusRes> getGolfSeatStatus(SeatStatusReq req) {
+        getFacility(req.getFacilityId());
+        return reservationMapper.getGolfSeatStatus(req);
+    }
+
 
 }

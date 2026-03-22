@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -65,6 +66,9 @@ public class Facility {
     public boolean getIsActive() { return isActive; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 
-
+    private Long programId;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String daysOfWeek;
 
 }
