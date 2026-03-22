@@ -54,7 +54,7 @@
             <if test="status != null and status != ''">
                 AND COALESCE(latest.status, '공실') = #{status}
             </if>
-            AND v.approved_by = 1
+       <!-- AND v.approved_by = 1-->
         </where>
 
         GROUP BY h.household_id, h.dong, h.ho, latest.status, latest.changed_at, h.created_at
