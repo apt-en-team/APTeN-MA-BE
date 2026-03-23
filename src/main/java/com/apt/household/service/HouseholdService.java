@@ -26,7 +26,7 @@ public class HouseholdService {
 
     private final HouseholdMapper householdMapper;
 
-    // ── API-014: 세대 목록 조회 (페이징) ─────────────────────────
+    // ── API-014: 세대 목록 조회 (페이징)
     public List<HouseholdRes> getHouseholds(HouseholdGetReq req) {
         return householdMapper.findAll(req);
     }
@@ -41,13 +41,13 @@ public class HouseholdService {
         return householdMapper.findPendingUsers(householdId);
     }
 
-    // ── 통계 조회 (프론트 상단 카드용) ───────────────────────────
+    // ── 통계 조회 (프론트 상단 카드용)
     // 전체/입주/공실/이번달 전입·전출 건수 반환
     public HouseholdStatsRes getStats() {
         return householdMapper.getStats();
     }
 
-    // ── API-018: 입주/퇴거 이력 등록 ─────────────────────────────
+    // ── API-018: 입주/퇴거 이력 등록
     // household_history 테이블에 이력 행 INSERT
     // 이력은 삭제하지 않고 누적 관리 (FR-011)
     @Transactional
@@ -77,7 +77,7 @@ public class HouseholdService {
         return res;
     }
 
-    // ── API-019: 입주/퇴거 이력 조회 ─────────────────────────────
+    // ── API-019: 입주/퇴거 이력 조회
     // 해당 세대의 전체 이력을 최신순으로 반환 (입주민 이름 포함)
     public List<HouseholdHistoryRes> getHistory(Long householdId) {
 

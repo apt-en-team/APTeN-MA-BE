@@ -106,6 +106,21 @@ public class FixedVisitorVehicleService {
         return result;
     }
 
+    // 관리자 고정 방문차량 등록 (소유권 체크 없이 userId로 직접 등록)
+    public void adminRegisterFixedVisitorVehicle(FixedVisitorVehicleReq req, Long userId) {
+        if (req.getEndDate() != null && req.getEndDate().isBefore(req.getStartDate())) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        FixedVisitorVehicle v = new FixedVisitorVehicle();
+        v.setUserId(userId);
+        v.setVehicleNumber(req.getVehicleNumber());
+        v.setVisitorName(req.getVisitorName());
+        v.setPurpose(req.getPurpose());
+        v.setStartDate(req.getStartDate());
+        v.setEndDate(req.getEndDate());
+        fixedVisitorVehicleMapper.insertFixedVisitorVehicle(v);
+    }
+
     // 관리자 고정 방문차량 삭제 (소유권 체크 없음)
     public void adminDeleteFixedVisitorVehicle(Long fixedId) {
         FixedVisitorVehicle v = fixedVisitorVehicleMapper.findFixedById(fixedId);

@@ -14,6 +14,7 @@ import com.apt.config.security.JwtTokenProvider;
 import com.apt.household.mapper.HouseholdMapper;
 import com.apt.household.model.Household;
 import com.apt.household.model.HouseholdHistory;
+import com.apt.notification.service.NotificationService;
 import com.apt.user.mapper.UserMapper;
 import com.apt.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,8 +51,11 @@ public class AuthService {
     // AT/RT 파싱 및 만료 확인
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 알림 서비스 (관리자에게 새 회원가입 알림 전송용)
+    private final NotificationService notificationService;
+
     // 회원가입 처리
-    // 1. 이메일 중복 확인 → 2. 세대 조회 → 3. 비밀번호 암호화 → 4. 사용자 등록
+    // 1. 이메일 중복 확인 → 2. 세대 조회 → 3. 비밀번호 암호화 → 4. 사용자 등록 → 5. 관리자 알림
     @Transactional
     public void signUp(UserSignUpReq req) {
 
@@ -74,6 +78,10 @@ public class AuthService {
 
         // DB에 회원 등록
         userMapper.signUp(req);
+
+        // 관리자에게 새 회원가입 신청 알림 전송
+        notificationService.notifyNewMemberToAdmins(req.getName());
+
         log.info("회원가입 완료 - email: {}", req.getEmail());
     }
 
@@ -156,7 +164,7 @@ public class AuthService {
     }
 
     // 소셜 로그인 후 동호수 연결
-    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. 입주 이력 등록
+    // 1. 동/호로 세대 조회 → 2. household_id 연결 → 3. 입주 이력 등록 → 4. 관리자 알림
     // status는 PENDING 유지 → 관리자가 직접 승인해야 APPROVED로 변경됨
     @Transactional
     public void linkHousehold(Long userId, LinkHouseholdReq req) {
@@ -176,6 +184,10 @@ public class AuthService {
         history.setUserId(userId);
         history.setStatus("입주");
         householdMapper.insertHistory(history);
+
+        // 관리자에게 새 회원가입 신청 알림 전송 (소셜 로그인 후 동호수 연결 시점)
+        User user = userMapper.findUserById(userId);
+        notificationService.notifyNewMemberToAdmins(user.getName());
 
         log.info("동호수 연결 완료 (승인 대기 중) - userId: {}, householdId: {}", userId, household.getHouseholdId());
     }
