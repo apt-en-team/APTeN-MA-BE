@@ -69,32 +69,30 @@ public class WebSecurityConfiguration implements WebMvcConfigurer {
 
                 // URL별 인증/인가 규칙 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 업로드된 이미지 파일은 인증 없이 접근 가능
+                        // 업로드 파일 공개
                         .requestMatchers("/apten/uploads/**").permitAll()
-
-                        // 인증 없이 접근 가능한 공개 API
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/check-email").permitAll()
-                        // 비밀번호 재설정 (인증 없이 접근 가능)
-                        .requestMatchers(HttpMethod.POST, "/api/mail/password-reset").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/mail/reset-password").permitAll()
-
-                        // 소셜 로그인 콜백 (OAuth2)
+                        // 소셜 로그인
                         .requestMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
-
-                        // Swagger UI (개발 환경)
+                        // Swagger
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // 관리자 전용 API (/api/admin/**)
+                        // 관리자만
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // 입주민 본인 탈퇴 - 인증된 사용자만
-                        .requestMatchers(HttpMethod.PATCH, "/api/auth/deactivate").authenticated()
+                        // 로그인 필요한 것들만 명시
+                        .requestMatchers("/api/auth/logout").authenticated() // 로그아웃
+                        .requestMatchers("/api/auth/deactivate").authenticated() // 회원 탈퇴
+                        .requestMatchers("/api/auth/link-household").authenticated() // 동호수 연결
+                        .requestMatchers("/api/notifications/**").authenticated() // 알림
+                        .requestMatchers("/api/vehicles/**").authenticated() // 차량
+                        .requestMatchers("/api/visitor-vehicles/**").authenticated() // 방문차량
+                        .requestMatchers("/api/parking/**").authenticated() // 주차
+                        .requestMatchers("/api/reservations/**").authenticated() // 시설 예약
+                        .requestMatchers("/api/boards/**").authenticated() // 게시판
+                        .requestMatchers("/api/users/**").authenticated() // 회원 정보
 
-                        // 나머지 모든 API는 로그인 필요
-                        .anyRequest().authenticated()
+                        // 전부 허용 (로그인, 회원가입, 비밀번호 재설정 등)
+                        .anyRequest().permitAll()
                 )
 
                 // 소셜 로그인 (네이버/카카오/구글) OAuth2 설정
