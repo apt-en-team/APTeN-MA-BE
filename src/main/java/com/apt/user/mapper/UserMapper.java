@@ -1,0 +1,50 @@
+package com.apt.user.mapper;
+
+import com.apt.auth.dto.request.UserSignUpReq;
+import com.apt.user.dto.request.UpdateUserReq;
+import com.apt.user.dto.response.UserGetMeRes;
+import com.apt.user.model.User;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+// user 테이블 접근 MyBatis Mapper
+@Mapper
+public interface UserMapper {
+
+    // 회원 등록 (일반 회원가입)
+    int signUp(UserSignUpReq req);
+
+    // 이메일로 사용자 조회 (로그인, 중복 체크용)
+    User findByEmail(String email);
+
+    // userId로 사용자 조회 (마이페이지용)
+    UserGetMeRes findById(Long userId);
+
+    // userId로 User 엔티티 조회 (소셜 로그인 승인 상태 확인용)
+    User findUserById(@Param("userId") Long userId);
+
+    // 소셜 로그인 제공자 + 제공자 ID로 사용자 조회
+    User findByProviderAndProviderId(String provider, String providerId);
+
+    // 소셜 로그인 신규 사용자 등록
+    int signUpOAuth(User user);
+
+    // 소프트 딜리트 (is_deleted=1, deleted_at=NOW())
+    int softDeleteUser(Long userId);
+
+    // 소셜 로그인 후 동호수 연결 (status는 PENDING 유지 → 관리자 승인 대기)
+    int linkHousehold(@Param("userId") Long userId,
+                      @Param("householdId") Long householdId,
+                      @Param("phone") String phone);
+
+    // 사용자 정보 수정 (이름, 전화번호)
+    int updateUser(@Param("userId") Long userId, @Param("req") UpdateUserReq req);
+
+    // 회원 탈퇴 시 이메일 null 처리 (재가입 허용을 위한 unique 제약 해제)
+    void clearEmail(Long userId);
+
+    // 비밀번호 변경
+    void updatePassword(Long userId, String password);
+}

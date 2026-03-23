@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.parking.mapper.ParkingLotMapper">
+
+    <!-- 주차장 ID로 단건 조회 -->
+    <select id="findById" parameterType="long" resultType="com.apt.parking.model.ParkingLot">
+        SELECT lot_id, name, total_spaces
+        FROM parking_lot
+        WHERE lot_id = #{lotId}
+    </select>
+
+    <!-- 주차장 정보 수정 (name, total_spaces만 수정)
+         current_count는 parking_log 집계로 계산하므로 여기서 관리하지 않음 -->
+    <update id="update" parameterType="com.apt.parking.model.ParkingLot">
+        UPDATE parking_lot
+        SET name         = #{name},
+            total_spaces = #{totalSpaces}
+        WHERE lot_id = #{lotId}
+    </update>
+
+</mapper>

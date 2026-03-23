@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.board.mapper.BoardMapper">
+
+    <!-- 게시글 목록 조회 (keyword 검색 지원) -->
+    <select id="getPostList" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+        b.board_id, b.user_id, b.category, b.title, b.content,
+        b.image_url, b.view_count, b.created_at, b.updated_at,
+        u.name AS author_name,
+        CONCAT(h.dong, ' ', h.ho) AS author_unit,
+        (SELECT COUNT(*) FROM comment c WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+        JOIN user u ON b.user_id = u.user_id
+        LEFT JOIN household h ON u.household_id = h.household_id
+        WHERE b.is_deleted = 0
+        <if test="category != null and category != ''">
+            AND b.category = #{category}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (b.title LIKE CONCAT('%', #{keyword}, '%')
+            OR b.content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY b.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 관리자 게시글 목록 조회 (삭제된 글 포함) -->
+    <select id="getAdminPostList" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+        b.board_id, b.user_id, b.category, b.title, b.content,
+        b.image_url, b.view_count, b.created_at, b.updated_at,
+        b.is_deleted,
+        u.name AS author_name,
+        CONCAT(h.dong, ' ', h.ho) AS author_unit,
+        (SELECT COUNT(*) FROM comment c WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+        JOIN user u ON b.user_id = u.user_id
+        LEFT JOIN household h ON u.household_id = h.household_id
+        WHERE 1=1
+        <if test="category != null and category != ''">
+            AND b.category = #{category}
+        </if>
+        <if test="isDeleted != null">
+            AND b.is_deleted = #{isDeleted}
+        </if>
+        ORDER BY b.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 게시글 총 개수, 삭제 여부 열람(관리자)  -->
+    <select id="getTotalCountAdmin" resultType="int">
+        SELECT COUNT(*) FROM board b
+        WHERE 1=1
+        <if test="category != null and category != ''">
+            AND b.category = #{category}
+        </if>
+        <if test="isDeleted != null">
+            AND b.is_deleted = #{isDeleted}
+        </if>
+    </select>
+
+    <!-- 입주자용 게시글 총 개수 (키워드 검색 지원) -->
+    <select id="getTotalCount" resultType="int">
+        SELECT COUNT(*) FROM board b
+        WHERE b.is_deleted = 0
+        <if test="category != null and category != ''">
+            AND b.category = #{category}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (b.title LIKE CONCAT('%', #{keyword}, '%')
+            OR b.content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <!-- 입주자 게시글 상세 -->
+    <select id="getPostDetail" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+            b.board_id, b.user_id, b.category, b.title, b.content,
+            b.image_url, b.view_count, b.created_at, b.updated_at,
+            u.name AS author_name,
+            CONCAT(h.dong, ' ', h.ho) AS author_unit,
+            (SELECT COUNT(*) FROM comment c WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+                 JOIN user u ON b.user_id = u.user_id
+                 LEFT JOIN household h ON u.household_id = h.household_id
+        WHERE b.board_id = #{id} AND b.is_deleted = 0
+    </select>
+
+    <!-- 관리자 게시글 상세 조회 (삭제된 글 포함) -->
+    <select id="getAdminPostDetail" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+            b.board_id, b.user_id, b.category, b.title, b.content,
+            b.image_url, b.view_count, b.created_at, b.updated_at,
+            b.is_deleted,
+            u.name AS author_name,
+            CONCAT(h.dong, ' ', h.ho) AS author_unit,
+            (SELECT COUNT(*) FROM comment c WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+                 JOIN user u ON b.user_id = u.user_id
+                 LEFT JOIN household h ON u.household_id = h.household_id
+        WHERE b.board_id = #{id}
+    </select>
+
+    <!-- 조회수 증가 -->
+    <update id="increaseViewCount">
+        UPDATE board SET view_count = view_count + 1 WHERE board_id = #{id}
+    </update>
+
+    <!-- 게시글 등록 -->
+    <insert id="createPost" useGeneratedKeys="true" keyProperty="req.boardId">
+        INSERT INTO board (user_id, category, title, content, image_url)
+        VALUES (#{userId}, #{req.category}, #{req.title}, #{req.content}, #{req.imageUrl})
+    </insert>
+
+    <!-- 이미지 이동 후 content + imageUrl 업데이트 -->
+    <update id="updateContent">
+        UPDATE board
+        SET content   = #{content},
+            image_url = #{imageUrl}
+        WHERE board_id = #{boardId}
+    </update>
+
+    <!-- 게시글 수정 -->
+    <update id="updatePost">
+        UPDATE board
+        SET title      = #{req.title},
+            content    = #{req.content},
+            image_url  = #{req.imageUrl},
+            updated_at = NOW()
+        WHERE board_id = #{req.boardId}
+          AND user_id  = #{userId}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 게시글 삭제 (soft delete) -->
+    <update id="deletePost">
+        UPDATE board SET is_deleted = 1, updated_at = NOW()
+        WHERE board_id = #{boardId}
+    </update>
+
+    <!-- 인기글 조회 (조회수 상위 3개) -->
+    <select id="getPopularPosts" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+            b.board_id, b.user_id, b.category, b.title,
+            b.image_url, b.view_count, b.created_at,
+            u.name AS author_name,
+            (SELECT COUNT(*) FROM comment c WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+                 JOIN user u ON b.user_id = u.user_id
+        WHERE b.is_deleted = 0 AND b.category != 'NOTICE'
+        ORDER BY b.view_count DESC
+            LIMIT 3
+    </select>
+
+    <!-- 내가 쓴 글 조회 -->
+    <select id="getMyPosts" resultType="com.apt.board.dto.response.BoardRes">
+        SELECT
+        b.board_id, b.user_id, b.category, b.title,
+        b.content, b.image_url, b.view_count, b.created_at, b.updated_at,
+        u.name AS author_name,
+        CONCAT(h.dong, ' ', h.ho) AS author_unit,
+        (SELECT COUNT(*) FROM comment c
+        WHERE c.board_id = b.board_id AND c.is_deleted = 0) AS comment_count
+        FROM board b
+        JOIN user u ON b.user_id = u.user_id
+        LEFT JOIN household h ON u.household_id = h.household_id
+        WHERE b.is_deleted = 0
+        AND b.user_id = #{userId}
+        ORDER BY b.created_at DESC
+        <if test="size != null">
+            LIMIT #{size}
+        </if>
+    </select>
+
+    <!-- 카테고리별 전체 카운트 (삭제 포함) -->
+    <select id="countByCategory" resultType="int">
+        SELECT COUNT(*) FROM board
+        WHERE 1=1
+        <if test="category != null and category != ''">
+            AND category = #{category}
+        </if>
+    </select>
+
+    <!-- 오늘 작성된 글 -->
+    <select id="countToday" resultType="int">
+        SELECT COUNT(*) FROM board
+        WHERE is_deleted = 0
+          AND DATE(created_at) = CURDATE()
+    </select>
+
+    <!-- 삭제된 글 -->
+    <select id="countDeleted" resultType="int">
+        SELECT COUNT(*) FROM board
+        WHERE is_deleted = 1
+    </select>
+
+    <!-- 전체 댓글 수 -->
+    <select id="countAllComments" resultType="int">
+        SELECT COUNT(*) FROM comment
+        WHERE is_deleted = 0
+    </select>
+
+</mapper>

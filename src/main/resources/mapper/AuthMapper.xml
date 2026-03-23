@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.apt.auth.mapper.AuthMapper">
+
+    <!-- RT 저장 -->
+    <insert id="saveRefreshToken"
+            parameterType="com.apt.auth.dto.request.AuthToken">
+        INSERT INTO refresh_token (user_id, refresh_token, expired_at, created_at)
+        VALUES (#{userId}, #{refreshToken}, #{expiredAt}, NOW())
+    </insert>
+
+    <!-- userId로 RT 조회 (토큰 재발급 검증) -->
+    <select id="findRefreshTokenByUserId" resultType="com.apt.auth.dto.request.AuthToken">
+        SELECT token_id, user_id, refresh_token, expired_at, created_at
+        FROM refresh_token
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+            LIMIT 1
+    </select>
+
+    <!-- userId로 RT 삭제 (로그아웃, 재로그인 시 기존 RT 제거) -->
+    <delete id="deleteRefreshTokenByUserId">
+        DELETE FROM refresh_token WHERE user_id = #{userId}
+    </delete>
+
+    <!-- RT 문자열로 RT 조회 (탈취 감지용) -->
+    <select id="findByRefreshToken" resultType="com.apt.auth.dto.request.AuthToken">
+        SELECT token_id, user_id, refresh_token, expired_at, created_at
+        FROM refresh_token
+        WHERE refresh_token = #{refreshToken}
+    </select>
+
+</mapper>
