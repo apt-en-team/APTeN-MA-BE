@@ -86,6 +86,8 @@ public enum ErrorCode {
     RESERVATION_NOT_FOUND(404, "예약을 찾을 수 없습니다"),
     // 예약 1시간 전까지만 취소 가능 (FR-047)
     CANCEL_TIME_EXPIRED(400, "예약 1시간 전까지만 취소 가능합니다"),
+    // GX는 예약 하루 전까지만 취소 가능 (FR-047)
+    CANCEL_DATE_EXPIRED(400, "GX프로그램 시작 하루 전까지만 취소 가능합니다"),
     // GX 예약 승인이 이미 처리된 경우
     GX_ALREADY_PROCESSED(400, "이미 처리된 강의입니다"),
     // [추가] 취소(삭제)할 예약이 존재하지 않는 경우

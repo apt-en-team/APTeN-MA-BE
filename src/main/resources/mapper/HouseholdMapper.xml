@@ -18,52 +18,52 @@
         - LIMIT/OFFSET 으로 페이징 처리
     -->
 
-        <select id="findAll" resultType="com.apt.household.dto.response.HouseholdRes">
-            SELECT
-            h.household_id AS householdId,
-            h.dong,
-            h.ho,
-            COALESCE(latest.status, '공실') AS status,
-            COUNT(DISTINCT CASE
-            WHEN v.status = 'APPROVED'
-            THEN v.vehicle_id
-            END) AS carCount,
-            COUNT(DISTINCT CASE WHEN u.status = 'PENDING'
-            AND u.is_deleted = false
-            THEN u.user_id END) AS pendingCount,
-            GREATEST(h.created_at, COALESCE(latest.changed_at, h.created_at)) AS lastChangedAt
-            FROM household h
+    <select id="findAll" resultType="com.apt.household.dto.response.HouseholdRes">
+        SELECT
+        h.household_id AS householdId,
+        h.dong,
+        h.ho,
+        COALESCE(latest.status, '공실') AS status,
+        COUNT(DISTINCT CASE
+        WHEN v.status = 'APPROVED'
+        THEN v.vehicle_id
+        END) AS carCount,
+        COUNT(DISTINCT CASE WHEN u.status = 'PENDING'
+        AND u.is_deleted = false
+        THEN u.user_id END) AS pendingCount,
+        GREATEST(h.created_at, COALESCE(latest.changed_at, h.created_at)) AS lastChangedAt
+        FROM household h
 
-            <!-- 최신 이력 1개만 미리 골라서 JOIN (ROW_NUMBER) -->
-            LEFT JOIN (
-            SELECT
-            household_id,
-            status,
-            changed_at,
-            ROW_NUMBER() OVER (PARTITION BY household_id ORDER BY changed_at DESC) AS rn
-            FROM household_history
-            ) latest ON latest.household_id = h.household_id AND latest.rn = 1
+        <!-- 최신 이력 1개만 미리 골라서 JOIN (ROW_NUMBER) -->
+        LEFT JOIN (
+        SELECT
+        household_id,
+        status,
+        changed_at,
+        ROW_NUMBER() OVER (PARTITION BY household_id ORDER BY changed_at DESC) AS rn
+        FROM household_history
+        ) latest ON latest.household_id = h.household_id AND latest.rn = 1
 
-            LEFT JOIN vehicle v ON v.household_id = h.household_id
-            LEFT JOIN user    u ON u.household_id = h.household_id
+        LEFT JOIN vehicle v ON v.household_id = h.household_id
+        LEFT JOIN user    u ON u.household_id = h.household_id
 
-            <where>
-                <if test="dong != null and dong != ''">
-                    h.dong = #{dong}
-                </if>
-                <if test="ho != null and ho != ''">
-                    AND h.ho LIKE CONCAT('%', #{ho}, '%')
-                </if>
-                <if test="status != null and status != ''">
-                    AND COALESCE(latest.status, '공실') = #{status}
-                </if>
-            </where>
+        <where>
+            <if test="dong != null and dong != ''">
+                h.dong = #{dong}
+            </if>
+            <if test="ho != null and ho != ''">
+                AND h.ho LIKE CONCAT('%', #{ho}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND COALESCE(latest.status, '공실') = #{status}
+            </if>
+        </where>
 
-            GROUP BY h.household_id, h.dong, h.ho, latest.status, latest.changed_at, h.created_at
+        GROUP BY h.household_id, h.dong, h.ho, latest.status, latest.changed_at, h.created_at
 
-            ORDER BY pendingCount DESC, h.dong, CAST(h.ho AS UNSIGNED)
-            LIMIT #{startIdx}, #{size}
-        </select>
+        ORDER BY pendingCount DESC, h.dong, CAST(h.ho AS UNSIGNED)
+        LIMIT #{startIdx}, #{size}
+    </select>
 
     <select id="findPendingUsers" resultType="com.apt.household.dto.response.PendingUserDto">
         SELECT user_id AS userId, name, phone
