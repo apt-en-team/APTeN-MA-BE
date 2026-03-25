@@ -11,6 +11,7 @@ import com.apt.reservation.dto.response.*;
 import com.apt.reservation.mapper.ReservationMapper;
 import com.apt.reservation.model.GxProgram;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,7 +107,7 @@ public class ReservationService {
 
     //예약 생성
     @Transactional
-    public ReservationRes createReservation(ReservationReq req){
+    public ReservationRes createReservation(ReservationReq req) {
         Facility facility = getFacility(req.getFacilityId());
         //과거 날짜 체크
         if (req.getReservationDate().isBefore(LocalDate.now())) {
@@ -145,17 +146,22 @@ public class ReservationService {
         }
         req.setStatus(req.getProgramId() != null ? "PENDING" : "CONFIRMED");
 
-        // 취소 이력이 있으면 재활성화
-        if (existing != null && "CANCELLED".equals(existing.getStatus())) {
-            reservationMapper.reactivateReservation(req);
+        try {
+            // 취소 이력이 있으면 재활성화
+            if (existing != null && "CANCELLED".equals(existing.getStatus())) {
+                reservationMapper.reactivateReservation(req);
 
-            ReservationRes reactivated = reservationMapper.findUserReservationByTime(req);
-            return reservationMapper.findReservationById(reactivated.getReservationId());
+                ReservationRes reactivated = reservationMapper.findUserReservationByTime(req);
+                return reservationMapper.findReservationById(reactivated.getReservationId());
+            }
+
+            reservationMapper.insertReservation(req);
+            System.out.println("facilityId = " + req.getFacilityId());
+            return reservationMapper.findReservationById(req.getReservationId());
+        } catch (DataIntegrityViolationException e) {
+            // DB 유니크 제약 위반 → 동시 요청 충돌
+            throw new CustomException(ErrorCode.DUPLICATE_RESERVATION);
         }
-
-        reservationMapper.insertReservation(req);
-        System.out.println("facilityId = " + req.getFacilityId());
-        return reservationMapper.findReservationById(req.getReservationId());
     }
 
     //내 예약 목록 조회
@@ -187,19 +193,28 @@ public class ReservationService {
         return reservation;
     }
 
-    //예약 취소(입주민)
+    // 예약 취소(입주민)
     @Transactional
-    public void cancelReservation(long id, long userId){
+    public void cancelReservation(long id, long userId) {
 
-        //본인 예약 확인
-        ReservationRes reservation = getReservationDetail(id, userId);
-        //상태 확인
-        reservation = getReservation(id);
+        // 본인 예약 확인
+        getReservationDetail(id, userId);
 
-        //1시간 전 예약 취소 방지
-        if(reservation.getReservationDate().equals(LocalDate.now()) &&
-                reservation.getStartTime().isBefore(LocalTime.now().plusHours(1)) || reservation.getReservationDate().isBefore(LocalDate.now()) ){
-            throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED);
+        // 상태 확인
+        ReservationRes reservation = getReservation(id);
+
+        // 일반 시설 한시간 전까지 취소가능
+        if (reservation.getProgramId() == null) {
+            if ((reservation.getReservationDate().equals(LocalDate.now()) &&
+                    reservation.getStartTime().isBefore(LocalTime.now().plusHours(1)))
+                    || reservation.getReservationDate().isBefore(LocalDate.now())
+            ) { throw new CustomException(ErrorCode.CANCEL_TIME_EXPIRED); }
+        }
+        // GX 프로그램 하루 전 취소불가
+        else {
+            if (!LocalDate.now().isBefore(reservation.getStartDate().minusDays(1))) {
+                throw new CustomException(ErrorCode.CANCEL_DATE_EXPIRED);
+            }
         }
 
         reservationMapper.cancelReservation(id);
@@ -365,7 +380,7 @@ public class ReservationService {
         int cancelledCount = 0;
 
         for (FacilityStatusRes item : list) {
-            if("CONFIRMED".equals(item.getStatus())){
+            if("CONFIRMED".equals(item.getStatus()) || "COMPLETED".equals(item.getStatus())){
                 confirmedCount++;
             } else if ("CANCELLED".equals(item.getStatus())) {
                 cancelledCount++;
