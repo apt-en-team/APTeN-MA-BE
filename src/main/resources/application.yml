@@ -82,5 +82,8 @@ constants:
 file:
   directory: ${FILE_DIRECTORY}
 
+app:
+  base-url: ${APP_BASE_URL:http://localhost:5173}
+
 server:
   port: ${SERVER_PORT}
