@@ -5,7 +5,7 @@
 APTeN은 입주민과 관리자가 함께 사용하는 스마트 아파트 통합 관리 시스템입니다.  
 방문차량 등록부터 주차 현황, 시설 예약, 게시판까지 아파트 생활 전반을 한 곳에서 관리할 수 있습니다.
 
-![Image](https://github.com/user-attachments/assets/4f37a3ca-2ea4-4ae1-82df-44307f5ec994)
+![Image](https://github.com/user-attachments/assets/4f37a3ca-2ea4-4ae1-82df-44307f5ec994) ![Image](https://github.com/user-attachments/assets/6d238e3a-862e-4fec-9414-c191b4d2b05e)
 
 ### 주요 기능
 - 방문차량 사전등록 및 고정 방문차량 관리
