@@ -33,6 +33,12 @@ public class JwtTokenManager {
         setRefreshTokenInCookie(res, jwtUser);
     }
 
+    // 이미 생성한 RT를 쿠키에 저장해 DB 저장값과 동일하게 유지
+    public void issue(HttpServletResponse res, JwtUser jwtUser, String refreshToken) {
+        setAccessTokenInCookie(res, jwtUser);
+        setRefreshTokenInCookie(res, refreshToken);
+    }
+
     // JwtUser로 AT 생성 후 쿠키에 저장
     public void setAccessTokenInCookie(HttpServletResponse res, JwtUser jwtUser) {
         String accessToken = jwtTokenProvider.generateAccessToken(jwtUser);

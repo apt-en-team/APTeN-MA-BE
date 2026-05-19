@@ -104,11 +104,13 @@ public class AuthService {
         // JWT에 담을 사용자 정보 생성
         JwtUser jwtUser = new JwtUser(user.getUserId(), user.getRole());
 
+        String refreshToken = jwtTokenProvider.generateRefreshToken(jwtUser);
+
         // AT/RT 생성 후 HttpOnly 쿠키로 발급
-        jwtTokenManager.issue(res, jwtUser);
+        jwtTokenManager.issue(res, jwtUser, refreshToken);
 
         // RT를 DB에 저장 (재발급 시 검증용)
-        saveRefreshToken(user.getUserId(), jwtTokenProvider.generateRefreshToken(jwtUser));
+        saveRefreshToken(user.getUserId(), refreshToken);
 
         log.info("로그인 성공 - userId: {}, role: {}", user.getUserId(), user.getRole());
 
