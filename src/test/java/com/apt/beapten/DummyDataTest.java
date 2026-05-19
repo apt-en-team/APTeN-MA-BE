@@ -1,5 +1,6 @@
 package com.apt.beapten;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * 세대 구성: 101동~109동 / 1층~15층 / 1호~10호 = 총 1350세대
  */
 @SpringBootTest
+@Disabled("실제 DB에 더미데이터를 삽입/삭제하는 수동 실행용 테스트")
 class DummyDataTest {
 
     @Autowired
